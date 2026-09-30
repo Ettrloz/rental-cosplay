@@ -1,0 +1,98 @@
+import clsx from 'clsx';
+import { Check, ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+export function Dropdown<T extends string>({
+  label,
+  value,
+  options,
+  onChange
+}: {
+  label: string;
+  value: T;
+  options: readonly T[];
+  onChange: (value: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative min-w-0 flex-1">
+      <span className="sr-only">{label}</span>
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen(prev => !prev)}
+        className={clsx(
+          'flex w-full items-center justify-between gap-2 rounded-xl border border-white/8 bg-[#12121a] py-3 pr-3 pl-3.5 text-left text-[13.5px] text-[#c9c9d8] transition-colors focus:border-[#7c3aed] focus:outline-none',
+          open && 'border-[#7c3aed]'
+        )}
+      >
+        <span className="truncate">{value}</span>
+        <ChevronDown
+          size={15}
+          className={clsx(
+            'shrink-0 text-[#5a5a6b] transition-transform duration-200',
+            open && 'rotate-180'
+          )}
+        />
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-white/10 bg-[#12121a] p-1.5 shadow-xl shadow-black/40"
+        >
+          {options.map(option => (
+            <li key={option}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={option === value}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+                className={clsx(
+                  'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-[13.5px] transition-colors',
+                  option === value
+                    ? 'bg-[#7c3aed]/20 text-white'
+                    : 'text-[#a1a1b5] hover:bg-white/8 hover:text-white'
+                )}
+              >
+                <span className="truncate">{option}</span>
+                {option === value && <Check size={14} className="shrink-0 text-[#a78bfa]" />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
