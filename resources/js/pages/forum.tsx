@@ -84,9 +84,16 @@ export default function Forum() {
               </div>
 
               <div className="mt-4 flex flex-col gap-3">
-                {threads.map(thread => (
-                  <ForumPost key={thread.judul} thread={thread} />
-                ))}
+                {threads.length > 0 ? (
+                  threads.map(thread => <ForumPost key={thread.judul} thread={thread} />)
+                ) : (
+                  <div className="rounded-2xl border border-line bg-card px-6 py-14 text-center">
+                    <p className="text-[14.5px] font-bold text-fg">Belum ada topik</p>
+                    <p className="mt-1 text-[13px] text-dim">
+                      Topik dari anggota komunitas akan tampil di sini.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -61,6 +61,7 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                Mysql::ATTR_SSL_VERIFY_SERVER_CERT => in_array(env('DB_SSLMODE'), ['require', 'verify-ca', 'verify-identity'], true) ? filter_var(env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT', true), FILTER_VALIDATE_BOOLEAN) : null,
             ]) : [],
         ],
 
@@ -115,8 +116,6 @@ return [
         ],
 
     ],
-
-
 
     /*
     |--------------------------------------------------------------------------

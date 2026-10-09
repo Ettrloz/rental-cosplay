@@ -47,11 +47,20 @@ export default function Event() {
 
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {EVENT.map(item => (
-              <EventCard key={item.judul} item={item} />
-            ))}
-          </div>
+          {EVENT.length > 0 ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {EVENT.map(item => (
+                <EventCard key={item.judul} item={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-line bg-card px-6 py-14 text-center">
+              <p className="text-[14.5px] font-bold text-fg">Belum ada event</p>
+              <p className="mt-1 text-[13px] text-dim">
+                Jadwal event cosplay terdekat akan tampil di sini.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 

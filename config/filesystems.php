@@ -60,6 +60,25 @@ return [
             'report' => false,
         ],
 
+        'b2' => [
+            'driver' => 's3',
+            'key' => env('B2_KEY_ID'),
+            'secret' => env('B2_APPLICATION_KEY'),
+            'region' => env('B2_REGION', 'us-east-005'),
+            'bucket' => env('B2_BUCKET'),
+            'endpoint' => (function (string $value) {
+                if ($value !== '' && ! str_starts_with($value, 'http')) {
+                    return 'https://'.$value;
+                }
+
+                return $value;
+            })(env('B2_ENDPOINT', 'https://s3.us-east-005.backblazeb2.com')),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
     ],
 
     /*

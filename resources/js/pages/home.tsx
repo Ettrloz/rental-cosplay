@@ -142,11 +142,15 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Trending" selengkapnyaHref="/katalog" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {TRENDING.slice(0, 3).map(item => (
-              <KostumCard key={item.judul} item={item} />
-            ))}
-          </div>
+          {TRENDING.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {TRENDING.slice(0, 3).map(item => (
+                <KostumCard key={item.judul} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+          )}
         </div>
       </section>
 
@@ -154,11 +158,15 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Katalog Terbaru" selengkapnyaHref="/katalog" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {KATALOG.map(item => (
-              <KostumCard key={item.judul} item={item} />
-            ))}
-          </div>
+          {KATALOG.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {KATALOG.map(item => (
+                <KostumCard key={item.judul} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+          )}
         </div>
       </section>
 
@@ -166,11 +174,15 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Bundle Terbaru" selengkapnyaHref="/katalog" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {BUNDLE.map(item => (
-              <KostumCard key={item.judul} item={item} />
-            ))}
-          </div>
+          {BUNDLE.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {BUNDLE.map(item => (
+                <KostumCard key={item.judul} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+          )}
         </div>
       </section>
 
@@ -178,11 +190,15 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="List Cosrent" selengkapnyaHref="/cosrent" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {COSRENT.slice(0, 3).map(item => (
-              <CosrentCard key={item.username} item={item} />
-            ))}
-          </div>
+          {COSRENT.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {COSRENT.slice(0, 3).map(item => (
+                <CosrentCard key={item.username} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+          )}
         </div>
       </section>
 
@@ -190,11 +206,15 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Event Cosplay" selengkapnyaHref="/event" />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {EVENT.slice(0, 2).map(item => (
-              <EventCard key={item.judul} item={item} />
-            ))}
-          </div>
+          {EVENT.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {EVENT.slice(0, 2).map(item => (
+                <EventCard key={item.judul} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+          )}
         </div>
       </section>
 
@@ -202,11 +222,15 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Forum" selengkapnyaHref="/forum" />
-          <div className="flex flex-col gap-3">
-            {FORUM.slice(0, 3).map(thread => (
-              <ForumPost key={thread.judul} thread={thread} />
-            ))}
-          </div>
+          {FORUM.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {FORUM.slice(0, 3).map(thread => (
+                <ForumPost key={thread.judul} thread={thread} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+          )}
         </div>
       </section>
     </AppLayout>

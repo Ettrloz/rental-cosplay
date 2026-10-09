@@ -1,3 +1,4 @@
+import { ConnectionToast } from '@/components/connection-toast';
 import { Footer } from '@/components/footer';
 import { Navbar } from '@/components/navbar';
 import { useReveal } from '@/hooks/use-reveal';
@@ -11,6 +12,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <ConnectionToast />
     </div>
   );
 }
