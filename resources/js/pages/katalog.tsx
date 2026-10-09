@@ -3,7 +3,7 @@ import { KostumCard } from '@/components/kostum-card';
 import { MOCK_KOSTUM } from '@/data/katalog';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
-import { PackageOpen, Search } from 'lucide-react';
+import { PackageOpen } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 function splitKota(kota: string) {
@@ -93,14 +93,10 @@ export default function Katalog() {
       <section>
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
           <div data-reveal className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/6 px-3 py-1.5 text-[12px] font-semibold text-[#c4b5fd] ring-1 ring-white/10">
-              <Search size={13} />
-              Sewa per 3 hari, kostum terverifikasi, aman dipakai makeup
-            </span>
-            <h1 className="mt-5 text-3xl leading-[1.15] font-extrabold tracking-tight text-white sm:text-4xl">
+            <h1 className="text-3xl leading-[1.15] font-extrabold tracking-tight text-fg sm:text-4xl">
               Cari Kostum Cosplay & Rental
             </h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-[#8a8a9c]">
+            <p className="mt-3 text-[15px] leading-relaxed text-dim">
               {kataKunci ? (
                 <>
                   Hasil untuk "{kataKunci}": {hasil.length} dari {MOCK_KOSTUM.length} kostum. Filter
@@ -117,7 +113,7 @@ export default function Katalog() {
         </div>
       </section>
 
-      <section className="bg-[#0d0d14]">
+      <section className="bg-panel">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           <FilterBar value={filter} onChange={setFilter} />
         </div>
@@ -134,16 +130,16 @@ export default function Katalog() {
           ) : (
             <div
               data-reveal
-              className="rounded-2xl border border-white/8 bg-[#12121a] px-6 py-14 text-center"
+              className="rounded-2xl border border-line bg-card px-6 py-14 text-center"
             >
               <span
-                className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white/6 text-[#5a5a6b]"
+                className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-chip text-fade"
                 aria-hidden="true"
               >
                 <PackageOpen size={26} strokeWidth={1.6} />
               </span>
-              <h2 className="mt-4 text-lg font-extrabold text-white">Belum ada kostum cocok</h2>
-              <p className="mx-auto mt-2 max-w-sm text-[14px] text-[#6f6f85]">
+              <h2 className="mt-4 text-lg font-extrabold text-fg">Belum ada kostum cocok</h2>
+              <p className="mx-auto mt-2 max-w-sm text-[14px] text-faint">
                 Coba ubah filter provinsi, kota, ukuran, atau gender untuk melihat lebih banyak
                 hasil.
               </p>

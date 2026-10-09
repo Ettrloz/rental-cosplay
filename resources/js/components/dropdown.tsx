@@ -50,15 +50,15 @@ export function Dropdown<T extends string>({
         aria-expanded={open}
         onClick={() => setOpen(prev => !prev)}
         className={clsx(
-          'flex w-full items-center justify-between gap-2 rounded-xl border border-white/8 bg-[#12121a] py-3 pr-3 pl-3.5 text-left text-[13.5px] text-[#c9c9d8] transition-colors focus:border-[#7c3aed] focus:outline-none',
-          open && 'border-[#7c3aed]'
+          'flex w-full items-center justify-between gap-2 rounded-xl border border-line bg-card py-3 pr-3 pl-3.5 text-left text-[13.5px] text-fg2 transition-colors focus:border-accent focus:outline-none',
+          open && 'border-accent'
         )}
       >
         <span className="truncate">{value}</span>
         <ChevronDown
           size={15}
           className={clsx(
-            'shrink-0 text-[#5a5a6b] transition-transform duration-200',
+            'shrink-0 text-fade transition-transform duration-200',
             open && 'rotate-180'
           )}
         />
@@ -67,7 +67,7 @@ export function Dropdown<T extends string>({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-white/10 bg-[#12121a] p-1.5 shadow-xl shadow-black/40"
+          className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-line2 bg-card p-1.5 shadow-xl shadow-black/40"
         >
           {options.map(option => (
             <li key={option}>
@@ -82,12 +82,12 @@ export function Dropdown<T extends string>({
                 className={clsx(
                   'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-[13.5px] transition-colors',
                   option === value
-                    ? 'bg-[#7c3aed]/20 text-white'
-                    : 'text-[#a1a1b5] hover:bg-white/8 hover:text-white'
+                    ? 'bg-accent-soft text-fg'
+                    : 'text-muted hover:bg-chip2 hover:text-fg'
                 )}
               >
                 <span className="truncate">{option}</span>
-                {option === value && <Check size={14} className="shrink-0 text-[#a78bfa]" />}
+                {option === value && <Check size={14} className="shrink-0 text-accent-text" />}
               </button>
             </li>
           ))}

@@ -10,11 +10,11 @@ export function SectionHead({
 }) {
   return (
     <div className="mb-6 flex items-center justify-between gap-4" data-reveal>
-      <h2 className="text-lg font-extrabold tracking-tight text-white">{judul}</h2>
+      <h2 className="text-lg font-extrabold tracking-tight text-fg">{judul}</h2>
       {selengkapnyaHref ? (
         <Link
           href={selengkapnyaHref}
-          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#a78bfa] transition-colors hover:text-[#c084fc]"
+          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-accent-text transition-colors hover:text-accent-hover"
         >
           Selengkapnya
           <ArrowRight size={14} />

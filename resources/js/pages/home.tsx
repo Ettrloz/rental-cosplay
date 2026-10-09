@@ -2,7 +2,7 @@ import { CosrentCard } from '@/components/cosrent-card';
 import { Dropdown } from '@/components/dropdown';
 import { EventCard } from '@/components/event-card';
 import { FILTER_AWAL, getFilterOptions } from '@/components/filter-bar';
-import { ForumRow } from '@/components/forum-row';
+import { ForumPost } from '@/components/forum-post';
 import { KostumCard } from '@/components/kostum-card';
 import { SectionHead } from '@/components/section-head';
 import { COSRENT } from '@/data/cosrent';
@@ -64,26 +64,26 @@ export default function Home() {
       <section className="relative">
         <div className="mx-auto max-w-6xl px-4 py-14 text-center sm:px-6 sm:py-20">
           <div data-reveal className="mx-auto max-w-2xl">
-            <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight text-white sm:text-5xl">
+            <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight text-fg sm:text-5xl">
               Platform Sewa Kostum Cosplay
             </h1>
           </div>
 
           <form
             data-reveal
-            className="mx-auto mt-8 flex max-w-md items-center gap-3 rounded-xl bg-white/6 px-4 py-3.5 text-left ring-1 ring-white/10 transition-shadow focus-within:ring-2 focus-within:ring-[#7c3aed]"
+            className="mx-auto mt-8 flex max-w-md items-center gap-3 rounded-xl bg-chip px-4 py-3.5 text-left ring-1 ring-line2 transition-shadow focus-within:ring-2 focus-within:ring-accent"
             onSubmit={event => {
               event.preventDefault();
               router.visit(buildKatalogUrl(kataKunci, filter));
             }}
           >
-            <Search size={18} className="shrink-0 text-[#6f6f85]" />
+            <Search size={18} className="shrink-0 text-faint" />
             <input
               type="text"
               value={kataKunci}
               onChange={event => setKataKunci(event.target.value)}
               placeholder="Cari karakter, judul kostum, atau series ..."
-              className="w-full bg-transparent text-[14.5px] text-white placeholder:text-[#6f6f85] outline-none"
+              className="w-full bg-transparent text-[14.5px] text-fg placeholder:text-faint outline-none"
             />
           </form>
 
@@ -119,20 +119,20 @@ export default function Home() {
 
           <dl className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-4" data-reveal>
             <div>
-              <dt className="text-[12.5px] text-[#6f6f85]">Katalog</dt>
-              <dd className="text-2xl font-extrabold text-white tabular-nums">13.280</dd>
+              <dt className="text-[12.5px] text-faint">Katalog</dt>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">13.280</dd>
             </div>
             <div>
-              <dt className="text-[12.5px] text-[#6f6f85]">Cosrent</dt>
-              <dd className="text-2xl font-extrabold text-white tabular-nums">587</dd>
+              <dt className="text-[12.5px] text-faint">Cosrent</dt>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">587</dd>
             </div>
             <div>
-              <dt className="text-[12.5px] text-[#6f6f85]">Kota</dt>
-              <dd className="text-2xl font-extrabold text-white tabular-nums">34</dd>
+              <dt className="text-[12.5px] text-faint">Kota</dt>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">34</dd>
             </div>
             <div>
-              <dt className="text-[12.5px] text-[#6f6f85]">Rating</dt>
-              <dd className="text-2xl font-extrabold text-white tabular-nums">4,9</dd>
+              <dt className="text-[12.5px] text-faint">Rating</dt>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">4,9</dd>
             </div>
           </dl>
         </div>
@@ -202,9 +202,9 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Forum" selengkapnyaHref="/forum" />
-          <div className="overflow-hidden rounded-2xl border border-white/8">
+          <div className="flex flex-col gap-3">
             {FORUM.slice(0, 3).map(thread => (
-              <ForumRow key={thread.judul} thread={thread} />
+              <ForumPost key={thread.judul} thread={thread} />
             ))}
           </div>
         </div>

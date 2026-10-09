@@ -1,17 +1,19 @@
-import { rupiah, type Kostum } from '@/data/katalog';
+import { rupiah, slugifyKostum, type Kostum } from '@/data/katalog';
+import { Link } from '@inertiajs/react';
 import { Heart, MapPin } from 'lucide-react';
 
 export function KostumCard({ item }: { item: Kostum }) {
   return (
-    <article
+    <Link
+      href={`/katalog/${slugifyKostum(item.judul)}`}
       data-reveal
-      className="group flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#12121a] transition-all duration-300 hover:-translate-y-1 hover:border-white/15 hover:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card transition-all duration-300 hover:-translate-y-1 hover:border-line2 hover:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]"
     >
       <div className="relative">
-        <div className="grid aspect-4/3 place-items-center bg-[#17171c] transition-transform duration-500 group-hover:scale-[1.02]">
+        <div className="grid aspect-4/3 place-items-center bg-card2 transition-transform duration-500 group-hover:scale-[1.02]">
           <item.icon
             size={52}
-            className="text-[#45454f] transition-colors duration-300 group-hover:text-[#8f7ef0]"
+            className="text-fade transition-colors duration-300 group-hover:text-[#8f7ef0]"
             strokeWidth={1.2}
           />
         </div>
@@ -32,23 +34,23 @@ export function KostumCard({ item }: { item: Kostum }) {
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center gap-2">
           <span
-            className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#26262f] text-[10px] font-extrabold text-white/85"
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-chip2 text-[10px] font-extrabold text-fg"
             aria-hidden="true"
           >
             {item.pemilik.charAt(0)}
           </span>
-          <span className="truncate text-[12px] font-semibold text-[#a1a1b5]">{item.username}</span>
+          <span className="truncate text-[12px] font-semibold text-muted">{item.username}</span>
         </div>
 
-        <h3 className="mt-2.5 line-clamp-2 text-[14.5px] leading-snug font-bold text-white">
+        <h3 className="mt-2.5 line-clamp-2 text-[14.5px] leading-snug font-bold text-fg">
           {item.judul}
         </h3>
 
-        <p className="mt-2 text-[13.5px] font-extrabold text-[#c084fc]">
+        <p className="mt-2 text-[13.5px] font-extrabold text-accent-text">
           {rupiah.format(item.harga)}
-          <span className="font-semibold text-[#6f6f85]"> / 3 hari</span>
+          <span className="font-semibold text-faint"> / 3 hari</span>
           {item.hargaCoret ? (
-            <span className="ml-2 text-[12.5px] font-medium text-[#5a5a6b] line-through">
+            <span className="ml-2 text-[12.5px] font-medium text-fade line-through">
               {rupiah.format(item.hargaCoret)}
             </span>
           ) : null}
@@ -56,39 +58,39 @@ export function KostumCard({ item }: { item: Kostum }) {
 
         <dl className="mt-3 space-y-1.5 text-[12.5px]">
           <div className="flex gap-2">
-            <dt className="w-14 shrink-0 text-[#5a5a6b]">Brand</dt>
-            <dd className="truncate text-[#a1a1b5]">{item.brand}</dd>
+            <dt className="w-14 shrink-0 text-fade">Brand</dt>
+            <dd className="truncate text-muted">{item.brand}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="w-14 shrink-0 text-[#5a5a6b]">Asal</dt>
-            <dd className="truncate text-[#a1a1b5]">{item.series}</dd>
+            <dt className="w-14 shrink-0 text-fade">Asal</dt>
+            <dd className="truncate text-muted">{item.series}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="w-14 shrink-0 text-[#5a5a6b]">Karakter</dt>
-            <dd className="truncate text-[#a1a1b5]">{item.karakter}</dd>
+            <dt className="w-14 shrink-0 text-fade">Karakter</dt>
+            <dd className="truncate text-muted">{item.karakter}</dd>
           </div>
         </dl>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <span className="rounded-md bg-white/6 px-2 py-1 text-[11px] font-bold text-[#c9c9d8]">
+          <span className="rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-fg2">
             {item.ukuran}
           </span>
-          <span className="rounded-md bg-white/6 px-2 py-1 text-[11px] font-bold text-[#c9c9d8]">
+          <span className="rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-fg2">
             LD: {item.ld}
           </span>
-          <span className="rounded-md bg-white/6 px-2 py-1 text-[11px] font-bold text-[#c9c9d8]">
+          <span className="rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-fg2">
             LP: {item.lp}
           </span>
-          <span className="rounded-md bg-white/6 px-2 py-1 text-[11px] font-bold text-[#c9c9d8]">
+          <span className="rounded-md bg-chip px-2 py-1 text-[11px] font-bold text-fg2">
             {item.gender}
           </span>
         </div>
 
-        <p className="mt-3 flex items-center gap-1.5 text-[12.5px] text-[#6f6f85]">
+        <p className="mt-3 flex items-center gap-1.5 text-[12.5px] text-faint">
           <MapPin size={13} />
           {item.kota}
         </p>
       </div>
-    </article>
+    </Link>
   );
 }

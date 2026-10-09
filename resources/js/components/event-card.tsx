@@ -1,29 +1,36 @@
-import type { JadwalEvent } from '@/data/event';
-import { CalendarDays, MapPin } from 'lucide-react';
+import { slugifyEvent, type JadwalEvent } from '@/data/event';
+import { Link } from '@inertiajs/react';
+import { MapPin } from 'lucide-react';
 
 export function EventCard({ item }: { item: JadwalEvent }) {
   return (
-    <div
+    <Link
+      href={`/event/${slugifyEvent(item.judul)}`}
       data-reveal
-      className="flex items-center gap-4 rounded-2xl border border-white/8 bg-[#12121a] p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/15"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card transition-all duration-300 hover:-translate-y-1 hover:border-line2 hover:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.9)]"
     >
-      <span
-        className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#17171c] text-[#5a5a6b]"
-        aria-hidden="true"
-      >
-        <CalendarDays size={24} strokeWidth={1.7} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate text-[15px] font-extrabold text-white">{item.judul}</h3>
-        <p className="mt-1 text-[13px] font-bold text-[#c084fc]">{item.tanggal}</p>
-        <p className="mt-0.5 truncate text-[12.5px] text-[#6f6f85]">{item.penyelenggara}</p>
+      <div className="relative aspect-video overflow-hidden">
+        <img
+          src={item.gambar}
+          alt={item.judul}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+        />
+        <span className="absolute top-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-[11.5px] font-extrabold text-white backdrop-blur-sm">
+          {item.tanggal}
+        </span>
       </div>
-      <div className="shrink-0 text-right">
-        <p className="flex items-center justify-end gap-1 text-[12.5px] text-[#6f6f85]">
-          <MapPin size={12} />
+
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="line-clamp-2 text-[15px] leading-snug font-extrabold text-fg">
+          {item.judul}
+        </h3>
+        <p className="mt-1.5 text-[12.5px] font-semibold text-dim">{item.penyelenggara}</p>
+        <p className="mt-auto flex items-center gap-1.5 pt-3 text-[12.5px] text-faint">
+          <MapPin size={13} />
           {item.lokasi}
         </p>
       </div>
-    </div>
+    </Link>
   );
 }

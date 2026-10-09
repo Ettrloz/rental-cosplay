@@ -1,6 +1,56 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
+:root {
+  color-scheme: light;
+  --page: #f5f5f6;
+  --nav: rgba(245, 245, 246, 0.85);
+  --panel: #ececee;
+  --card: #ffffff;
+  --card2: #fafafa;
+  --raised: #fbfbfc;
+  --line: rgba(0, 0, 0, 0.09);
+  --line2: rgba(0, 0, 0, 0.14);
+  --chip: rgba(0, 0, 0, 0.05);
+  --chip2: rgba(0, 0, 0, 0.07);
+  --chip3: rgba(0, 0, 0, 0.1);
+  --fg: #1c1c20;
+  --fg2: #33333a;
+  --muted: #52525b;
+  --dim: #6b6b75;
+  --faint: #8a8a94;
+  --fade: #a8a8b0;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-soft: rgba(124, 58, 237, 0.12);
+  --accent-text: #6d28d9;
+}
+
+.dark {
+  color-scheme: dark;
+  --page: #0a0a0f;
+  --nav: rgba(10, 10, 15, 0.85);
+  --panel: #0d0d14;
+  --card: #12121a;
+  --card2: #17171c;
+  --raised: #18181f;
+  --line: rgba(255, 255, 255, 0.08);
+  --line2: rgba(255, 255, 255, 0.12);
+  --chip: rgba(255, 255, 255, 0.06);
+  --chip2: rgba(255, 255, 255, 0.1);
+  --chip3: rgba(255, 255, 255, 0.14);
+  --fg: #f4f4f6;
+  --fg2: #c9c9d8;
+  --muted: #a1a1b5;
+  --dim: #8a8a9c;
+  --faint: #6f6f85;
+  --fade: #5a5a6b;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-soft: rgba(124, 58, 237, 0.2);
+  --accent-text: #c4b5fd;
+}
+
 [data-reveal] {
   opacity: 0;
   transform: translateY(20px);

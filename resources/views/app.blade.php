@@ -22,7 +22,7 @@
         {{-- Inline style to set the HTML background color so there is no white flash before hydration --}}
         <style>
             html {
-                background-color: oklch(0.145 0 0);
+                background-color: var(--page, oklch(0.145 0 0));
             }
         </style>
 

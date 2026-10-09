@@ -94,15 +94,13 @@ export function FilterBar({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-[12.5px] font-semibold text-[#6f6f85]">Ukuran:</span>
+        <span className="text-[12.5px] font-semibold text-faint">Ukuran:</span>
         <button
           type="button"
           onClick={() => set({ ukuran: 'Semua' })}
           className={clsx(
             'rounded-lg px-2.5 py-1.5 text-[12.5px] font-bold transition-colors',
-            value.ukuran === 'Semua'
-              ? 'bg-[#7c3aed] text-white'
-              : 'bg-white/6 text-[#a1a1b5] hover:bg-white/10'
+            value.ukuran === 'Semua' ? 'bg-accent text-white' : 'bg-chip text-muted hover:bg-chip3'
           )}
         >
           Semua
@@ -114,9 +112,7 @@ export function FilterBar({
             onClick={() => set({ ukuran })}
             className={clsx(
               'rounded-lg px-2.5 py-1.5 text-[12.5px] font-bold transition-colors',
-              value.ukuran === ukuran
-                ? 'bg-[#7c3aed] text-white'
-                : 'bg-white/6 text-[#a1a1b5] hover:bg-white/10'
+              value.ukuran === ukuran ? 'bg-accent text-white' : 'bg-chip text-muted hover:bg-chip3'
             )}
           >
             {ukuran}

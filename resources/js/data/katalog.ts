@@ -261,3 +261,32 @@ export const BUNDLE: Kostum[] = [
 ];
 
 export const MOCK_KOSTUM: Kostum[] = [...TRENDING, ...KATALOG, ...BUNDLE];
+
+export function slugifyKostum(judul: string): string {
+  return judul
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/[\s-]+/g, '-');
+}
+
+export function cariKostum(slug: string): Kostum | undefined {
+  return MOCK_KOSTUM.find(item => slugifyKostum(item.judul) === slug);
+}
+
+export function deskripsiKostum(item: Kostum): string {
+  const seri = item.series !== item.karakter ? ` dari seri *${item.series}*` : '';
+  const ukuran = item.ukuran !== 'All Size' ? `${item.ukuran}` : 'semua ukuran';
+  const bagian = [
+    `Sewa kostum *${item.karakter}*${seri} dengan brand ${item.brand}.`,
+    `Tersedia ukuran ${ukuran} (LD ${item.ld} cm, LP ${item.lp} cm) dan cocok untuk gender ${item.gender}.`,
+    item.bundle
+      ? 'Ini adalah paket bundle: satu harga sudah termasuk beberapa karakter dalam satu set lengkap.'
+      : 'Penyewaan per 3 hari, tanpa minimum, dengan pengembalian gratis.',
+    `Kostum dikelola oleh ${item.pemilik} (@${item.username}) dari ${item.kota}.`
+  ];
+
+  return bagian.join(' ');
+}

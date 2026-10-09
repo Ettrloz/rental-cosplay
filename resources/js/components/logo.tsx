@@ -10,8 +10,8 @@ export function Logo() {
       >
         <Sparkles size={18} strokeWidth={2.2} />
       </span>
-      <span className="text-[16px] font-extrabold tracking-tight text-white">
-        Rent<span className="text-[#a78bfa]">Cos</span>
+      <span className="text-[16px] font-extrabold tracking-tight text-fg">
+        Rent<span className="text-accent">Cos</span>
       </span>
     </Link>
   );
