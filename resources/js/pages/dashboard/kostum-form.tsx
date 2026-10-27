@@ -50,13 +50,18 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
   const [previews, setPreviews] = useState<{ file: File; url: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const tambahGambar = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
-    e.target.value = '';
+  const handleFiles = (files: File[]) => {
+    const fileList = Array.from(files ?? []);
+    if (!fileList.length) return;
 
     const sisaSlot = 8 - gambarAda.length - previews.length;
-    const fileBaru = files.slice(0, sisaSlot);
+    if (sisaSlot <= 0) return;
+
+    const fileBaru = fileList
+      .filter(file => file.type.startsWith('image/'))
+      .slice(0, sisaSlot);
+
+    if (!fileBaru.length) return;
 
     const newPreviews = fileBaru.map(file => ({
       file,
@@ -66,6 +71,51 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
     const updatedPreviews = [...previews, ...newPreviews];
     setPreviews(updatedPreviews);
     form.setData('images', updatedPreviews.map(p => p.file));
+  };
+
+  const tambahGambar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    e.target.value = '';
+    handleFiles(files);
+  };
+
+  const [dragActive, setDragActive] = useState(false);
+  const dragCounter = useRef(0);
+
+  const handleDragEnter = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setDragActive(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setDragActive(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    dragCounter.current = 0;
+
+    if (totalGambar >= 8) return;
+
+    const files = Array.from(e.dataTransfer.files ?? []);
+    handleFiles(files);
   };
 
   const hapusPreview = (index: number) => {
@@ -294,15 +344,25 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
               </div>
             ) : null}
 
-            {/* Tombol tambah foto */}
+            {/* Dropzone tambah foto */}
             {totalGambar < 8 ? (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-line2 bg-chip px-4 py-5 text-[13px] font-bold text-dim transition-colors hover:border-accent hover:text-fg"
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-5 text-[13px] font-bold transition-colors ${
+                  dragActive
+                    ? 'border-accent bg-accent/10 text-fg'
+                    : 'border-line2 bg-chip text-dim hover:border-accent hover:text-fg'
+                }`}
               >
                 <ImagePlus size={16} />
-                Tambah foto ({8 - totalGambar} slot tersisa)
+                {dragActive
+                  ? 'Lepaskan foto di sini'
+                  : `Tambah atau seret foto (${8 - totalGambar} slot tersisa)`}
               </button>
             ) : (
               <p className="text-center text-[12px] text-faint">Maksimal 8 foto tercapai</p>

@@ -8,6 +8,7 @@ use App\Http\Resources\CostumeResource;
 use App\Models\City;
 use App\Models\CosrentProfile;
 use App\Models\Costume;
+use App\Models\CostumeImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -93,6 +94,40 @@ class CostumeController extends Controller
         $costume->delete();
 
         return to_route('dashboard.kostum')->with('success', 'Kostum berhasil dihapus.');
+    }
+
+    public function destroyImage(Request $request, Costume $costume): RedirectResponse
+    {
+        $this->authorizeOwner($request, $costume);
+
+        $url = $request->input('url');
+
+        if (! is_string($url) || $url === '') {
+            return back();
+        }
+
+        $image = $costume->images()->get()->first(function (CostumeImage $image) use ($url) {
+            $imageUrl = method_exists($image, 'getUrlAttribute') ? $image->url : null;
+
+            if (is_string($imageUrl) && $imageUrl === $url) {
+                return true;
+            }
+
+            if (is_string($image->path) && str_ends_with($url, $image->path)) {
+                return true;
+            }
+
+            return false;
+        });
+
+        if (! $image) {
+            return back();
+        }
+
+        Storage::disk('b2')->delete($image->path);
+        $image->delete();
+
+        return back();
     }
 
     private function ensureProfile(Request $request): CosrentProfile

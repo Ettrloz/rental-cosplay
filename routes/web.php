@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard/kostum/{costume}/edit', [CostumeController::class, 'edit'])->name('dashboard.kostum.edit');
         Route::put('/dashboard/kostum/{costume}', [CostumeController::class, 'update'])->name('dashboard.kostum.update');
         Route::delete('/dashboard/kostum/{costume}', [CostumeController::class, 'destroy'])->name('dashboard.kostum.destroy');
+        Route::delete('/dashboard/kostum/{costume}/images', [CostumeController::class, 'destroyImage'])->name('dashboard.kostum.images.destroy');
 
         Route::get('/dashboard/profil', [CosrentProfileController::class, 'edit'])->name('dashboard.profil');
         Route::put('/dashboard/profil', [CosrentProfileController::class, 'update'])->name('dashboard.profil.update');
