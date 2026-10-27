@@ -8,6 +8,7 @@ use App\Models\Costume;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class CostumeController extends Controller
 {
@@ -34,31 +35,34 @@ class CostumeController extends Controller
             return [];
         }
 
-        return Costume::query()
-            ->whereNotNull('size')
-            ->distinct()
-            ->pluck('size')
-            ->filter(function (string $size) use ($target) {
-                if (strcasecmp(trim($size), 'All Size') === 0) {
-                    return true;
-                }
+        $sizes = Cache::remember('costumes.distinct_sizes', 3600, function () {
+            return Costume::query()
+                ->whereNotNull('size')
+                ->distinct()
+                ->pluck('size')
+                ->map(fn ($size) => (string) $size)
+                ->all();
+        });
 
-                $posisi = array_filter(
-                    array_map(
-                        fn (string $bagian) => array_search(strtoupper(trim($bagian)), self::URUTAN_UKURAN, true),
-                        explode('-', $size)
-                    ),
-                    fn ($index) => $index !== false
-                );
+        return array_values(array_filter($sizes, function (string $size) use ($target) {
+            if (strcasecmp(trim($size), 'All Size') === 0) {
+                return true;
+            }
 
-                if (empty($posisi)) {
-                    return false;
-                }
+            $posisi = array_filter(
+                array_map(
+                    fn (string $bagian) => array_search(strtoupper(trim($bagian)), self::URUTAN_UKURAN, true),
+                    explode('-', $size)
+                ),
+                fn ($index) => $index !== false
+            );
 
-                return $target >= min($posisi) && $target <= max($posisi);
-            })
-            ->values()
-            ->all();
+            if (empty($posisi)) {
+                return false;
+            }
+
+            return $target >= min($posisi) && $target <= max($posisi);
+        }));
     }
 
     public function index(Request $request): AnonymousResourceCollection
