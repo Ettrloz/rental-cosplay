@@ -19,7 +19,7 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('home', absolute: false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
@@ -40,6 +40,18 @@ test('users with two factor enabled are redirected to two factor challenge', fun
     $response->assertRedirect(route('two-factor.login'));
     $response->assertSessionHas('login.id', $user->id);
     $this->assertGuest();
+});
+
+test('users can authenticate using their username', function () {
+    $user = User::factory()->create(['username' => 'joko.rent']);
+
+    $response = $this->post(route('login.store'), [
+        'email' => 'joko.rent',
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('home', absolute: false));
 });
 
 test('users can not authenticate with invalid password', function () {

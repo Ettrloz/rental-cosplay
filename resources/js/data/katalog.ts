@@ -9,6 +9,8 @@ export const rupiah = new Intl.NumberFormat('id-ID', {
 export const UKURAN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as const;
 
 export type Kostum = {
+  id?: number;
+  slug?: string;
   judul: string;
   harga: number;
   hargaCoret?: number;
@@ -25,6 +27,15 @@ export type Kostum = {
   dilihat: number;
   icon: LucideIcon;
   bundle?: boolean;
+  gambar?: string[];
+  rentalDays?: number;
+  deskripsi?: string | null;
+  status?: string;
+  cityId?: number | null;
+  whatsapp?: string | null;
+  instagram?: string | null;
+  rental_rules?: string | null;
+  rental_rules_image?: string | null;
 };
 
 export const TRENDING: Kostum[] = [];

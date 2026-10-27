@@ -1,32 +1,46 @@
 import { KostumCard } from '@/components/kostum-card';
 import { KomentarSection } from '@/components/komentar-section';
 import { useToast } from '@/components/toast';
-import { cariCosrent } from '@/data/cosrent';
-import { MOCK_KOSTUM } from '@/data/katalog';
+import { useCosrentDetail } from '@/hooks/use-cosrent';
+import { useKostumList } from '@/hooks/use-kostum';
+import { igLink, waLink } from '@/lib/kontak';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
   ArrowLeft,
+  AtSign,
   BadgeCheck,
-  CalendarDays,
-  Clock,
   MapPin,
   MessageCircle,
   PackageOpen,
-  ShieldCheck,
   Star,
   UserPlus,
   Users
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 export default function DetailCosrent() {
   const { url } = usePage();
-  const item = cariCosrent(decodeURIComponent(url.split('/').pop() ?? ''));
+  const username = decodeURIComponent(url.split('/').pop() ?? '');
+  const { item, loading } = useCosrentDetail(username);
+  const { items: kostum } = useKostumList(
+    useMemo(() => `/api/costumes?cosrent=${encodeURIComponent(username)}`, [username])
+  );
 
   const [diikuti, setDiikuti] = useState(false);
   const { panggil, toast } = useToast();
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <Head title="Memuat cosrent..." />
+        <div className="mx-auto max-w-3xl px-4 py-24 text-center text-[13.5px] text-dim">
+          Memuat cosrent...
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (!item) {
     return (
@@ -50,7 +64,22 @@ export default function DetailCosrent() {
     );
   }
 
-  const kostumSaya = MOCK_KOSTUM.filter(kostum => kostum.username === item.username);
+  const tautanWa = waLink(
+    item.whatsapp,
+    `Halo ${item.nama}, saya menemukan tokomu di Lumisse Cosplay dan ingin bertanya soal sewa kostum.`
+  );
+  const tautanIg = igLink(item.instagram);
+
+  const hubungi = () => {
+    const tujuan = tautanWa ?? tautanIg;
+
+    if (tujuan) {
+      window.open(tujuan, '_blank', 'noopener');
+      return;
+    }
+
+    panggil('Cosrent belum mencantumkan kontak');
+  };
 
   return (
     <AppLayout>
@@ -69,16 +98,18 @@ export default function DetailCosrent() {
           className="mt-5 overflow-hidden rounded-3xl border border-line bg-card"
         >
           <div className="relative aspect-[6/2]">
-            <img
-              src={item.foto}
-              alt={item.nama}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
-            <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[11.5px] font-extrabold text-white backdrop-blur-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#34d399]" />
-              {item.online}
-            </span>
+            {item.thumbnail ?? item.foto ? (
+              <img
+                src={item.thumbnail ?? item.foto}
+                alt={item.nama}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-linear-to-br from-[#7c3aed] to-[#ec4899] text-[44px] font-extrabold text-white">
+                {item.nama.charAt(0)}
+              </div>
+            )}
           </div>
 
           <div className="p-5 sm:p-7">
@@ -121,76 +152,64 @@ export default function DetailCosrent() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => panggil('Fitur segera hadir')}
+                  onClick={hubungi}
                   className="inline-flex items-center gap-2 rounded-xl border border-line bg-chip px-4 py-2.5 text-[13.5px] font-extrabold text-fg transition-colors duration-200 hover:border-line2"
                 >
-                  <MessageCircle size={15} />
-                  Chat
+                  {tautanIg ? <AtSign size={15} /> : <MessageCircle size={15} />}
+                  Kontak
                 </button>
               </div>
             </div>
 
             <div className="mt-6 grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:max-w-md">
               <div className="bg-card px-4 py-3 text-center">
-                <p className="text-lg font-extrabold tabular-nums text-fg">
+                <p className="text-lg font-extrabold text-fg tabular-nums">
                   {item.post.toLocaleString('id-ID')}
                 </p>
-                <p className="text-[11.5px] font-semibold text-fade">Post kostum</p>
+                <p className="text-[11.5px] font-semibold text-fade">Kostum</p>
               </div>
               <div className="bg-card px-4 py-3 text-center">
-                <p className="text-lg font-extrabold tabular-nums text-fg">
+                <p className="text-lg font-extrabold text-fg tabular-nums">
                   {item.pengikut.toLocaleString('id-ID')}
                 </p>
                 <p className="text-[11.5px] font-semibold text-fade">Pengikut</p>
               </div>
               <div className="bg-card px-4 py-3 text-center">
-                <p className="flex items-center justify-center gap-1 text-lg font-extrabold tabular-nums text-fg">
-                  <Star size={15} className="text-[#fbbf24]" />
-                  {item.rating}
+                <p className="flex items-center justify-center gap-1 text-lg font-extrabold text-fg tabular-nums">
+                  <Star size={13} className="text-[#fbbf24]" />
+                  {item.rating > 0 ? item.rating : '-'}
                 </p>
-                <p className="text-[11.5px] font-semibold text-fade">
-                  {item.ulasanCount.toLocaleString('id-ID')} ulasan
-                </p>
+                <p className="text-[11.5px] font-semibold text-fade">Rating</p>
               </div>
             </div>
 
-            <p className="mt-5 text-[14.5px] leading-relaxed text-fg2">{item.deskripsi}</p>
+            {(item.bio ?? item.deskripsi) ? (
+              <p className="mt-6 text-[14px] leading-relaxed text-fg2">{item.bio ?? item.deskripsi}</p>
+            ) : null}
 
-            <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 sm:max-w-lg">
-              <div className="flex items-center gap-3 bg-card px-4 py-3">
-                <CalendarDays size={16} className="shrink-0 text-accent-text" />
-                <div>
-                  <p className="text-[11px] font-bold tracking-wide text-fade uppercase">
-                    Toko dibuka
-                  </p>
-                  <p className="text-[13.5px] font-bold text-fg">{item.tokoDibuka}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-card px-4 py-3">
-                <Clock size={16} className="shrink-0 text-accent-text" />
-                <div>
-                  <p className="text-[11px] font-bold tracking-wide text-fade uppercase">
-                    Jam operasional
-                  </p>
-                  <p className="text-[13.5px] font-bold text-fg">{item.jamOperasional}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-card px-4 py-3">
-                <MapPin size={16} className="shrink-0 text-accent-text" />
-                <div>
-                  <p className="text-[11px] font-bold tracking-wide text-fade uppercase">Lokasi</p>
-                  <p className="text-[13.5px] font-bold text-fg">{item.kota}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-card px-4 py-3">
-                <ShieldCheck size={16} className="shrink-0 text-accent-text" />
-                <div>
-                  <p className="text-[11px] font-bold tracking-wide text-fade uppercase">Status</p>
-                  <p className="text-[13.5px] font-bold text-fg">
-                    {item.terverifikasi ? 'Terverifikasi' : 'Belum terverifikasi'}
-                  </p>
-                </div>
-              </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {tautanWa ? (
+                <a
+                  href={tautanWa}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[13.5px] font-extrabold text-white transition-colors hover:bg-accent-hover"
+                >
+                  <MessageCircle size={15} />
+                  Hubungi via WhatsApp
+                </a>
+              ) : null}
+              {tautanIg ? (
+                <a
+                  href={tautanIg}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-line bg-chip px-5 py-3 text-[13.5px] font-extrabold text-fg transition-colors hover:border-line2"
+                >
+                  <AtSign size={15} />
+                  Instagram
+                </a>
+              ) : null}
             </div>
           </div>
         </article>
@@ -200,10 +219,10 @@ export default function DetailCosrent() {
             <PackageOpen size={16} className="text-accent-text" />
             Kostum dari {item.nama}
           </h2>
-          {kostumSaya.length > 0 ? (
+          {kostum.length > 0 ? (
             <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {kostumSaya.map(kostum => (
-                <KostumCard key={kostum.judul} item={kostum} />
+              {kostum.map(k => (
+                <KostumCard key={k.id ?? k.judul} item={k} />
               ))}
             </div>
           ) : (

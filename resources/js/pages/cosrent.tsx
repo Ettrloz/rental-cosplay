@@ -1,5 +1,5 @@
 import { CosrentCard } from '@/components/cosrent-card';
-import { COSRENT } from '@/data/cosrent';
+import { useCosrentList } from '@/hooks/use-cosrent';
 import { AppLayout } from '@/layouts/app-layout';
 import { register } from '@/routes';
 import { Head, Link } from '@inertiajs/react';
@@ -8,14 +8,15 @@ import { useMemo, useState } from 'react';
 
 export default function Cosrent() {
   const [kata, setKata] = useState('');
+  const { items, loading } = useCosrentList();
 
   const hasil = useMemo(() => {
     const cari = kata.trim().toLowerCase();
-    if (!cari) return COSRENT;
-    return COSRENT.filter(
+    if (!cari) return items;
+    return items.filter(
       item => item.nama.toLowerCase().includes(cari) || item.kota.toLowerCase().includes(cari)
     );
-  }, [kata]);
+  }, [kata, items]);
 
   return (
     <AppLayout>
@@ -52,7 +53,7 @@ export default function Cosrent() {
               />
             </div>
             <span className="ml-auto shrink-0 text-[12.5px] font-semibold text-faint">
-              {hasil.length} dari {COSRENT.length} cosrent
+              {hasil.length} dari {items.length} cosrent
             </span>
           </div>
 
@@ -62,6 +63,8 @@ export default function Cosrent() {
                 <CosrentCard key={item.username} item={item} />
               ))}
             </div>
+          ) : loading ? (
+            <p className="mt-6 text-[14px] text-faint">Memuat data...</p>
           ) : (
             <div className="mt-6 rounded-2xl border border-line bg-card px-5 py-14 text-center">
               <Search size={28} className="mx-auto text-faint" />

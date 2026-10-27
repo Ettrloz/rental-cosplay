@@ -104,7 +104,7 @@ export default function Forum() {
                     R
                   </span>
                   <div>
-                    <p className="text-[15px] font-extrabold text-fg">r/RentCosCosplay</p>
+                    <p className="text-[15px] font-extrabold text-fg">r/LumisseCosplay</p>
                     <p className="mt-0.5 text-[12.5px] font-semibold text-fade">
                       Komunitas cosplay & rental kostum Indonesia
                     </p>

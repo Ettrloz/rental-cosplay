@@ -1,12 +1,18 @@
 import type { Komentar } from '@/data/forum';
 
 export type Cosrent = {
+  id?: number;
   nama: string;
   username: string;
   kota: string;
+  cityId?: number | null;
+  instagram?: string | null;
+  whatsapp?: string | null;
   post: number;
   online: string;
   foto: string;
+  thumbnail?: string | null;
+  bio?: string | null;
   deskripsi: string;
   rating: number;
   ulasanCount: number;

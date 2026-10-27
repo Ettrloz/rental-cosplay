@@ -1,7 +1,7 @@
 import { Dropdown } from '@/components/dropdown';
 import { MOCK_KOSTUM, UKURAN } from '@/data/katalog';
 import clsx from 'clsx';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export type FilterState = {
   provinsi: string;
@@ -27,6 +27,46 @@ function parseKota(kota: string) {
 export function getFilterOptions() {
   const provinsi = [...new Set(MOCK_KOSTUM.map(item => parseKota(item.kota).provinsi))].sort();
   const kota = [...new Set(MOCK_KOSTUM.map(item => parseKota(item.kota).kota))].sort();
+  return { provinsi, kota };
+}
+
+type ProvinsiApi = { id: number; name: string };
+type KotaApi = { id: number; province_id: number; name: string };
+
+export function useLokasiOptions(provinsiDipilih: string) {
+  const [provinsiList, setProvinsiList] = useState<ProvinsiApi[]>([]);
+  const [kotaList, setKotaList] = useState<KotaApi[]>([]);
+
+  useEffect(() => {
+    let batal = false;
+    const opsi = { headers: { Accept: 'application/json' } };
+
+    Promise.all([
+      fetch('/api/provinces', opsi).then(res => res.json()),
+      fetch('/api/cities', opsi).then(res => res.json())
+    ])
+      .then(([provinsi, kota]) => {
+        if (batal) return;
+        setProvinsiList(provinsi.data ?? []);
+        setKotaList(kota.data ?? []);
+      })
+      .catch(() => {
+        // Jika API gagal, dropdown tetap hanya berisi pilihan "Semua".
+      });
+
+    return () => {
+      batal = true;
+    };
+  }, []);
+
+  const provinsi = useMemo(() => provinsiList.map(item => item.name), [provinsiList]);
+
+  const kota = useMemo(() => {
+    const dipilih = provinsiList.find(item => item.name === provinsiDipilih);
+    const sumber = dipilih ? kotaList.filter(item => item.province_id === dipilih.id) : kotaList;
+    return [...new Set(sumber.map(item => item.name))];
+  }, [provinsiList, kotaList, provinsiDipilih]);
+
   return { provinsi, kota };
 }
 
@@ -60,7 +100,7 @@ export function FilterBar({
   value: FilterState;
   onChange: (filter: FilterState) => void;
 }) {
-  const { provinsi, kota } = useMemo(() => getFilterOptions(), []);
+  const { provinsi, kota } = useLokasiOptions(value.provinsi);
 
   const set = (patch: Partial<FilterState>) => onChange({ ...value, ...patch });
 
@@ -71,7 +111,7 @@ export function FilterBar({
           label="Provinsi"
           value={value.provinsi}
           options={['Semua Provinsi', ...provinsi]}
-          onChange={setProvinsi => set({ provinsi: setProvinsi })}
+          onChange={setProvinsi => set({ provinsi: setProvinsi, kota: FILTER_AWAL.kota })}
         />
         <FilterSelect
           label="Kota"

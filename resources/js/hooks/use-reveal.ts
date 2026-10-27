@@ -7,28 +7,45 @@ export function useReveal<T extends HTMLElement>(): RefObject<T | null> {
     const root = ref.current;
     if (!root) return;
 
-    const targets = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'));
-    if (targets.length === 0) return;
+    const seen = new WeakSet<Element>();
 
-    if (!('IntersectionObserver' in window)) {
-      targets.forEach(target => target.setAttribute('data-reveal', 'shown'));
-      return;
-    }
+    const observer =
+      'IntersectionObserver' in window
+        ? new IntersectionObserver(
+            entries => {
+              entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                (entry.target as HTMLElement).setAttribute('data-reveal', 'shown');
+                observer?.unobserve(entry.target);
+              });
+            },
+            { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+          )
+        : null;
 
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (!entry.isIntersecting) return;
-          (entry.target as HTMLElement).setAttribute('data-reveal', 'shown');
-          observer.unobserve(entry.target);
-        });
-      },
-      { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
-    );
+    const register = () => {
+      root.querySelectorAll<HTMLElement>('[data-reveal]').forEach(target => {
+        if (seen.has(target) || target.getAttribute('data-reveal') === 'shown') return;
+        seen.add(target);
 
-    targets.forEach(target => observer.observe(target));
+        if (observer) {
+          observer.observe(target);
+        } else {
+          target.setAttribute('data-reveal', 'shown');
+        }
+      });
+    };
 
-    return () => observer.disconnect();
+    register();
+
+    // Elemen yang muncul belakangan (misalnya kartu dari API) ikut didata.
+    const mutation = new MutationObserver(register);
+    mutation.observe(root, { childList: true, subtree: true });
+
+    return () => {
+      mutation.disconnect();
+      observer?.disconnect();
+    };
   }, []);
 
   return ref;

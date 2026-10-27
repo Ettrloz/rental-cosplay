@@ -1,5 +1,6 @@
 import { Logo } from '@/components/logo';
-import type { ReactNode } from 'react';
+import clsx from 'clsx';
+import type { ChangeEvent, ReactNode } from 'react';
 
 export function AuthShell({
   judul,
@@ -37,24 +38,44 @@ export function AuthShell({
 
 export function AuthField({
   label,
+  name,
   type = 'text',
   autoComplete,
-  placeholder
+  placeholder,
+  value,
+  onChange,
+  error,
+  required
 }: {
   label: string;
+  name: string;
   type?: string;
   autoComplete?: string;
   placeholder?: string;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-[13px] font-semibold text-fg2">{label}</span>
       <input
+        name={name}
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-line bg-chip px-4 py-3 text-[14px] text-fg placeholder:text-faint focus:border-accent focus:outline-none"
+        value={value}
+        onChange={onChange}
+        required={required}
+        className={clsx(
+          'w-full rounded-xl border bg-chip px-4 py-3 text-[14px] text-fg placeholder:text-faint focus:outline-none',
+          error ? 'border-red-500/70 focus:border-red-500' : 'border-line focus:border-accent'
+        )}
       />
+      {error ? (
+        <span className="mt-1 block text-[12px] font-medium text-red-500">{error}</span>
+      ) : null}
     </label>
   );
 }

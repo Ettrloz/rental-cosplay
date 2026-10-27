@@ -91,7 +91,7 @@ export default function DetailTopik() {
               href="/forum"
               className="font-bold text-accent-text transition-colors hover:underline"
             >
-              r/RentCosCosplay
+              r/LumisseCosplay
             </Link>
             <span aria-hidden="true">•</span>
             <span className="font-semibold text-muted">u/{thread.penulis}</span>

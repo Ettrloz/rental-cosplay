@@ -1,15 +1,10 @@
-import { FilterBar, FILTER_AWAL, type FilterState } from '@/components/filter-bar';
+import { FILTER_AWAL, FilterBar, type FilterState } from '@/components/filter-bar';
 import { KostumCard } from '@/components/kostum-card';
-import { MOCK_KOSTUM } from '@/data/katalog';
+import { useKostumList } from '@/hooks/use-kostum';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
-import { PackageOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PackageOpen } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-
-function splitKota(kota: string) {
-  const [kabupaten, ...rest] = kota.split(', ');
-  return { kota: kabupaten, provinsi: rest.join(', ') };
-}
 
 function filterFromUrl(url: string): FilterState {
   const params = new URLSearchParams(new URL(url, window.location.origin).search);
@@ -37,54 +32,39 @@ export default function Katalog() {
     [url]
   );
   const [filter, setFilter] = useState(() => filterFromUrl(url));
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     setFilter(filterFromUrl(url));
+    setPage(1);
   }, [url]);
 
-  const hasil = useMemo(() => {
-    let items = MOCK_KOSTUM.filter(item => {
-      const { provinsi, kota } = splitKota(item.kota);
-      if (filter.provinsi !== 'Semua Provinsi' && provinsi !== filter.provinsi) return false;
-      if (filter.kota !== 'Semua Kota' && kota !== filter.kota) return false;
-      if (filter.gender !== 'Semua' && item.gender !== filter.gender) return false;
-      if (filter.ukuran !== 'Semua') {
-        const tokens = item.ukuran.split('-').map(part => part.trim());
-        if (!tokens.includes(filter.ukuran)) return false;
-      }
-      if (kataKunci.trim()) {
-        const q = kataKunci.trim().toLowerCase();
-        const haystack = [
-          item.judul,
-          item.karakter,
-          item.series,
-          item.brand,
-          item.pemilik,
-          item.kota
-        ]
-          .join(' ')
-          .toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
-      return true;
-    });
+  const ubahFilter = (next: FilterState) => {
+    setFilter(next);
+    setPage(1);
+  };
 
-    switch (filter.urutan) {
-      case 'Harga Terendah':
-        items = [...items].sort((a, b) => a.harga - b.harga);
-        break;
-      case 'Harga Tertinggi':
-        items = [...items].sort((a, b) => b.harga - a.harga);
-        break;
-      case 'Paling Banyak Dilihat':
-        items = [...items].sort((a, b) => b.dilihat - a.dilihat);
-        break;
-      default:
-        break;
-    }
+  const apiUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (kataKunci.trim()) params.set('q', kataKunci.trim());
+    if (filter.provinsi !== FILTER_AWAL.provinsi) params.set('provinsi', filter.provinsi);
+    if (filter.kota !== FILTER_AWAL.kota) params.set('kota', filter.kota);
+    if (filter.gender !== 'Semua') params.set('gender', filter.gender);
+    if (filter.ukuran !== 'Semua') params.set('ukuran', filter.ukuran);
+    if (filter.urutan !== 'Terbaru') params.set('urutan', filter.urutan);
+    if (page > 1) params.set('page', String(page));
+    return `/api/costumes?${params.toString()}`;
+  }, [filter, kataKunci, page]);
 
-    return items;
-  }, [filter, kataKunci]);
+  const { items: hasil, loading, meta } = useKostumList(apiUrl);
+
+  const totalHalaman = meta?.last_page ?? 1;
+  const total = meta?.total ?? hasil.length;
+
+  const pindahHalaman = (tujuan: number) => {
+    setPage(Math.min(Math.max(tujuan, 1), totalHalaman));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <AppLayout>
@@ -97,17 +77,9 @@ export default function Katalog() {
               Cari Kostum Cosplay & Rental
             </h1>
             <p className="mt-3 text-[15px] leading-relaxed text-dim">
-              {kataKunci ? (
-                <>
-                  Hasil untuk "{kataKunci}": {hasil.length} dari {MOCK_KOSTUM.length} kostum. Filter
-                  berdasarkan provinsi, kota, ukuran, gender, dan urutan harga.
-                </>
-              ) : (
-                <>
-                  Tampilkan {hasil.length} dari {MOCK_KOSTUM.length} kostum yang tersedia. Filter
-                  berdasarkan provinsi, kota, ukuran, gender, dan urutan harga.
-                </>
-              )}
+              {kataKunci ? <>Hasil untuk "{kataKunci}": </> : null}
+              Menampilkan {hasil.length} dari {total} kostum yang tersedia. Filter berdasarkan
+              provinsi, kota, ukuran, gender, dan urutan harga.
             </p>
           </div>
         </div>
@@ -115,7 +87,7 @@ export default function Katalog() {
 
       <section className="bg-panel">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-          <FilterBar value={filter} onChange={setFilter} />
+          <FilterBar value={filter} onChange={ubahFilter} />
         </div>
       </section>
 
@@ -127,6 +99,8 @@ export default function Katalog() {
                 <KostumCard key={`${item.judul}-${item.username}`} item={item} />
               ))}
             </div>
+          ) : loading ? (
+            <p className="text-[14px] text-faint">Memuat data...</p>
           ) : (
             <div
               data-reveal
@@ -145,6 +119,35 @@ export default function Katalog() {
               </p>
             </div>
           )}
+
+          {totalHalaman > 1 ? (
+            <nav
+              className="mt-10 flex items-center justify-center gap-3"
+              aria-label="Halaman kostum"
+            >
+              <button
+                type="button"
+                onClick={() => pindahHalaman(page - 1)}
+                disabled={page <= 1 || loading}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-card px-4 py-2.5 text-[13.5px] font-bold text-fg transition-colors hover:border-line2 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft size={16} />
+                Sebelumnya
+              </button>
+              <span className="text-[13px] font-semibold text-faint tabular-nums">
+                Halaman {page} dari {totalHalaman}
+              </span>
+              <button
+                type="button"
+                onClick={() => pindahHalaman(page + 1)}
+                disabled={page >= totalHalaman || loading}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-card px-4 py-2.5 text-[13.5px] font-bold text-fg transition-colors hover:border-line2 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Berikutnya
+                <ChevronRight size={16} />
+              </button>
+            </nav>
+          ) : null}
         </div>
       </section>
     </AppLayout>

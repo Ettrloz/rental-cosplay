@@ -83,7 +83,14 @@ export default defineConfig({
       host: LAN_IP
     },
     watch: {
-      ignored: ['**/.agents/**', '**/.claude/**', '**/.cursor/**', '**/.junie/**', '**/vendor/**']
+      ignored: [
+        '**/.agents/**',
+        '**/.claude/**',
+        '**/.cursor/**',
+        '**/.junie/**',
+        '**/vendor/**',
+        '**/storage/**'
+      ]
     }
   },
   lint: {

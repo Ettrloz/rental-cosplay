@@ -1,18 +1,19 @@
 import { CosrentCard } from '@/components/cosrent-card';
 import { Dropdown } from '@/components/dropdown';
 import { EventCard } from '@/components/event-card';
-import { FILTER_AWAL, getFilterOptions } from '@/components/filter-bar';
+import { FILTER_AWAL, useLokasiOptions } from '@/components/filter-bar';
 import { ForumPost } from '@/components/forum-post';
 import { KostumCard } from '@/components/kostum-card';
 import { SectionHead } from '@/components/section-head';
-import { COSRENT } from '@/data/cosrent';
 import { EVENT } from '@/data/event';
 import { FORUM } from '@/data/forum';
-import { BUNDLE, KATALOG, TRENDING } from '@/data/katalog';
+import { BUNDLE } from '@/data/katalog';
+import { useCosrentList } from '@/hooks/use-cosrent';
+import { useKostumList, useStats } from '@/hooks/use-kostum';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 const GENDER_OPTIONS = ['Semua', 'Wanita', 'Pria'] as const;
 const URUTAN_OPTIONS = [
@@ -21,6 +22,8 @@ const URUTAN_OPTIONS = [
   'Harga Tertinggi',
   'Paling Banyak Dilihat'
 ] as const;
+
+const angka = new Intl.NumberFormat('id-ID');
 
 type HeroFilter = {
   provinsi: string;
@@ -41,7 +44,6 @@ function buildKatalogUrl(kataKunci: string, filter: HeroFilter) {
 }
 
 export default function Home() {
-  const { provinsi, kota } = useMemo(() => getFilterOptions(), []);
   const [kataKunci, setKataKunci] = useState('');
   const [filter, setFilter] = useState<HeroFilter>({
     provinsi: FILTER_AWAL.provinsi,
@@ -49,6 +51,11 @@ export default function Home() {
     gender: 'Semua',
     urutan: 'Terbaru'
   });
+  const { provinsi, kota } = useLokasiOptions(filter.provinsi);
+  const stats = useStats();
+  const trending = useKostumList('/api/costumes/trending');
+  const katalog = useKostumList('/api/costumes/latest');
+  const cosrent = useCosrentList();
 
   const pilihFilter = (patch: Partial<HeroFilter>) => {
     const next = { ...filter, ...patch };
@@ -95,7 +102,7 @@ export default function Home() {
               label="Provinsi"
               value={filter.provinsi}
               options={[FILTER_AWAL.provinsi, ...provinsi]}
-              onChange={nilai => pilihFilter({ provinsi: nilai })}
+              onChange={nilai => pilihFilter({ provinsi: nilai, kota: FILTER_AWAL.kota })}
             />
             <Dropdown
               label="Kota"
@@ -120,19 +127,27 @@ export default function Home() {
           <dl className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-4" data-reveal>
             <div>
               <dt className="text-[12.5px] text-faint">Katalog</dt>
-              <dd className="text-2xl font-extrabold text-fg tabular-nums">13.280</dd>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">
+                {stats ? angka.format(stats.costumes) : '-'}
+              </dd>
             </div>
             <div>
               <dt className="text-[12.5px] text-faint">Cosrent</dt>
-              <dd className="text-2xl font-extrabold text-fg tabular-nums">587</dd>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">
+                {stats ? angka.format(stats.cosrents) : '-'}
+              </dd>
             </div>
             <div>
               <dt className="text-[12.5px] text-faint">Kota</dt>
-              <dd className="text-2xl font-extrabold text-fg tabular-nums">34</dd>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">
+                {stats ? angka.format(stats.cities) : '-'}
+              </dd>
             </div>
             <div>
               <dt className="text-[12.5px] text-faint">Rating</dt>
-              <dd className="text-2xl font-extrabold text-fg tabular-nums">4,9</dd>
+              <dd className="text-2xl font-extrabold text-fg tabular-nums">
+                {stats?.rating != null ? String(stats.rating).replace('.', ',') : '-'}
+              </dd>
             </div>
           </dl>
         </div>
@@ -142,14 +157,16 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Trending" selengkapnyaHref="/katalog" />
-          {TRENDING.length > 0 ? (
+          {trending.items.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {TRENDING.slice(0, 3).map(item => (
+              {trending.items.slice(0, 3).map(item => (
                 <KostumCard key={item.judul} item={item} />
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+            <p className="mt-4 text-[13px] text-faint">
+              {trending.loading ? 'Memuat data...' : 'Belum ada data yang tersedia.'}
+            </p>
           )}
         </div>
       </section>
@@ -158,14 +175,16 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Katalog Terbaru" selengkapnyaHref="/katalog" />
-          {KATALOG.length > 0 ? (
+          {katalog.items.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {KATALOG.map(item => (
+              {katalog.items.map(item => (
                 <KostumCard key={item.judul} item={item} />
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+            <p className="mt-4 text-[13px] text-faint">
+              {katalog.loading ? 'Memuat data...' : 'Belum ada data yang tersedia.'}
+            </p>
           )}
         </div>
       </section>
@@ -190,14 +209,16 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="List Cosrent" selengkapnyaHref="/cosrent" />
-          {COSRENT.length > 0 ? (
+          {cosrent.items.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {COSRENT.slice(0, 3).map(item => (
+              {cosrent.items.slice(0, 3).map(item => (
                 <CosrentCard key={item.username} item={item} />
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-[13px] text-faint">Belum ada data yang tersedia.</p>
+            <p className="mt-4 text-[13px] text-faint">
+              {cosrent.loading ? 'Memuat data...' : 'Belum ada data yang tersedia.'}
+            </p>
           )}
         </div>
       </section>
