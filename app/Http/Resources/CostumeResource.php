@@ -38,6 +38,7 @@ class CostumeResource extends JsonResource
             'instagram' => $profile?->instagram,
             'dilihat' => $this->views,
             'gambar' => $this->images
+                ->when($request->attributes->get('costume_preview', false), fn ($images) => $images->take(1))
                 ->map(fn ($image) => B2::url($image->path))
                 ->filter()
                 ->values(),

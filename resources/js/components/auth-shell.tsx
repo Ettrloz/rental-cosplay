@@ -6,12 +6,14 @@ export function AuthShell({
   judul,
   deskripsi,
   children,
-  footer
+  footer,
+  lebar = 'sm'
 }: {
   judul: string;
   deskripsi?: string;
   children: ReactNode;
   footer?: ReactNode;
+  lebar?: 'sm' | 'xl';
 }) {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-page px-4 py-12">
@@ -19,8 +21,8 @@ export function AuthShell({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-linear-to-br from-[#7c3aed]/30 via-[#ec4899]/15 to-transparent"
       />
-      <div className="relative w-full max-w-sm">
-        <div className="rounded-3xl border border-line bg-card p-6 shadow-2xl shadow-black/10 sm:p-8">
+      <div className={clsx('relative w-full', lebar === 'xl' ? 'max-w-4xl' : 'max-w-xl')}>
+        <div className="rounded-3xl border border-line bg-card p-5 shadow-2xl shadow-black/10 sm:p-8 lg:p-10">
           <div className="flex flex-col items-center text-center">
             <Logo />
             <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-fg">{judul}</h1>

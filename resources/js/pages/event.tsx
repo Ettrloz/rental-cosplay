@@ -1,13 +1,14 @@
 import { EventCard } from '@/components/event-card';
 import { useToast } from '@/components/toast';
-import { EVENT } from '@/data/event';
+import { useEventList } from '@/hooks/use-event';
 import { AppLayout } from '@/layouts/app-layout';
-import { router, usePage, Head } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 
 export default function Event() {
   const { auth } = usePage<{ auth?: { user?: unknown } }>().props;
   const { panggil, toast } = useToast();
+  const { items, loading } = useEventList();
 
   function buatEvent() {
     if (auth?.user) {
@@ -47,12 +48,14 @@ export default function Event() {
 
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          {EVENT.length > 0 ? (
+          {items.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {EVENT.map(item => (
+              {items.map(item => (
                 <EventCard key={item.judul} item={item} />
               ))}
             </div>
+          ) : loading ? (
+            <p className="text-[14px] text-faint">Memuat data...</p>
           ) : (
             <div className="rounded-2xl border border-line bg-card px-6 py-14 text-center">
               <p className="text-[14.5px] font-bold text-fg">Belum ada event</p>

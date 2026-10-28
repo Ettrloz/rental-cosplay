@@ -82,7 +82,9 @@ function Lightbox({ gambar, awal, judul, onTutup }: LightboxProps) {
       {/* Foto utama */}
       <div
         className="flex h-full w-full items-center justify-center p-14 sm:p-20"
-        onClick={e => e.stopPropagation()}
+        onClick={e => {
+          if (e.target === e.currentTarget) onTutup();
+        }}
       >
         <img
           src={gambar[aktif]}

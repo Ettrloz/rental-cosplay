@@ -8,7 +8,7 @@ void createInertiaApp({
   title: title => (title ? `${title} - ${appName}` : appName),
   strictMode: true,
   progress: {
-    color: '#4B5563'
+    color: '#7c3aed'
   }
 });
 

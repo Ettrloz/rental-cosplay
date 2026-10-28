@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Models\CosrentProfile;
 use App\Models\Costume;
 use App\Models\CostumeImage;
+use App\Support\B2;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,7 +51,7 @@ class CostumeController extends Controller
         $profile = $this->ensureProfile($request);
 
         $costume = $profile->costumes()->create([
-            ...$request->safe()->except('images'),
+            ...$request->safe()->except(['images', 'deleted_images']),
             'slug' => $this->uniqueSlug($request->string('title')->toString()),
         ]);
 
@@ -76,7 +77,9 @@ class CostumeController extends Controller
     {
         $this->authorizeOwner($request, $costume);
 
-        $costume->update($request->safe()->except('images'));
+        $costume->update($request->safe()->except(['images', 'deleted_images']));
+
+        $this->deleteImages($costume, $request->validated('deleted_images', []));
 
         $this->syncImages($costume, $request);
 
@@ -189,6 +192,39 @@ class CostumeController extends Controller
                     'sort_order' => $start + $index + 1,
                 ]);
             }
+        }
+    }
+
+    /**
+     * Delete images only after the edit form has been submitted successfully.
+     *
+     * @param array<int, string> $urls
+     */
+    private function deleteImages(Costume $costume, array $urls): void
+    {
+        if ($urls === []) {
+            return;
+        }
+
+        foreach ($costume->images as $image) {
+            $matches = collect($urls)->contains(function (string $url) use ($image): bool {
+                if (is_string($image->path) && str_ends_with($url, $image->path)) {
+                    return true;
+                }
+
+                try {
+                    return B2::url($image->path) === $url;
+                } catch (\Throwable) {
+                    return false;
+                }
+            });
+
+            if (! $matches) {
+                continue;
+            }
+
+            Storage::disk('b2')->delete($image->path);
+            $image->delete();
         }
     }
 

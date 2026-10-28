@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CostumeResource;
 use App\Models\Costume;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
 
 class CostumeController extends Controller
 {
+    private const CACHE_SECONDS = 30;
+
     private const URUTAN_UKURAN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
     private function baseQuery(): Builder
@@ -65,66 +67,83 @@ class CostumeController extends Controller
         }));
     }
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
-        $query = $this->baseQuery()
-            ->when($request->query('cosrent'), fn ($q, $nilai) => $q->whereHas(
-                'cosrentProfile.user',
-                fn ($u) => $u->where('username', $nilai)
-            ))
-            ->when($request->query('provinsi'), fn ($q, $nilai) => $q->whereHas(
-                'city.province',
-                fn ($p) => $p->where('name', $nilai)
-            ))
-            ->when($request->query('kota'), fn ($q, $nilai) => $q->whereHas(
-                'city',
-                fn ($c) => $c->where('name', $nilai)
-            ))
-            ->when($request->query('gender'), fn ($q, $nilai) => $q->where('gender', strtolower($nilai)))
-            ->when($request->query('ukuran'), fn ($q, $nilai) => $nilai === 'Semua'
-                ? $q
-                : $q->whereIn('size', $this->ukuranYangCocok($nilai)))
-            ->when($request->query('q'), function ($q, $kata) {
-                $q->where(function ($w) use ($kata) {
-                    $w->where('title', 'like', "%{$kata}%")
-                        ->orWhere('character', 'like', "%{$kata}%")
-                        ->orWhere('series', 'like', "%{$kata}%")
-                        ->orWhere('brand', 'like', "%{$kata}%")
-                        ->orWhereHas('cosrentProfile', fn ($c) => $c->where('shop_name', 'like', "%{$kata}%"));
+        $request->attributes->set('costume_preview', true);
+
+        $cacheKey = 'api:costumes:index:'.sha1($request->fullUrl());
+
+        $payload = Cache::remember($cacheKey, self::CACHE_SECONDS, function () use ($request) {
+            $query = $this->baseQuery()
+                ->when($request->query('cosrent'), fn ($q, $nilai) => $q->whereHas(
+                    'cosrentProfile.user', fn ($u) => $u->where('username', $nilai)
+                ))
+                ->when($request->query('provinsi'), fn ($q, $nilai) => $q->whereHas(
+                    'city.province', fn ($p) => $p->where('name', $nilai)
+                ))
+                ->when($request->query('kota'), fn ($q, $nilai) => $q->whereHas(
+                    'city', fn ($c) => $c->where('name', $nilai)
+                ))
+                ->when($request->query('gender'), fn ($q, $nilai) => $q->where('gender', strtolower($nilai)))
+                ->when($request->query('ukuran'), fn ($q, $nilai) => $nilai === 'Semua'
+                    ? $q
+                    : $q->whereIn('size', $this->ukuranYangCocok($nilai)))
+                ->when($request->query('q'), function ($q, $kata) {
+                    $q->where(function ($w) use ($kata) {
+                        $w->where('title', 'like', "%{$kata}%")
+                            ->orWhere('character', 'like', "%{$kata}%")
+                            ->orWhere('series', 'like', "%{$kata}%")
+                            ->orWhere('brand', 'like', "%{$kata}%")
+                            ->orWhereHas('cosrentProfile', fn ($c) => $c->where('shop_name', 'like', "%{$kata}%"));
+                    });
                 });
-            });
 
-        match ($request->query('urutan')) {
-            'Harga Terendah' => $query->orderBy('price'),
-            'Harga Tertinggi' => $query->orderByDesc('price'),
-            'Paling Banyak Dilihat' => $query->orderByDesc('views'),
-            default => $query->orderByDesc('id'),
-        };
+            match ($request->query('urutan')) {
+                'Harga Terendah' => $query->orderBy('price'),
+                'Harga Tertinggi' => $query->orderByDesc('price'),
+                'Paling Banyak Dilihat' => $query->orderByDesc('views'),
+                default => $query->orderByDesc('id'),
+            };
 
-        return CostumeResource::collection($query->paginate(12)->withQueryString());
+            return CostumeResource::collection($query->paginate(12)->withQueryString())
+                ->response()
+                ->getData(true);
+        });
+
+        return response()->json($payload);
     }
 
-    public function show(string $slug): CostumeResource
+    public function show(string $slug): JsonResponse
     {
-        $costume = $this->baseQuery()
-            ->with(['city.province', 'cosrentProfile.user', 'images'])
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $payload = Cache::remember("api:costumes:show:{$slug}", self::CACHE_SECONDS, function () use ($slug) {
+            $costume = $this->baseQuery()
+                ->with(['city.province', 'cosrentProfile.user', 'images'])
+                ->where('slug', $slug)
+                ->firstOrFail();
 
-        return new CostumeResource($costume);
+            return (new CostumeResource($costume))->response()->getData(true);
+        });
+
+        return response()->json($payload);
     }
 
-    public function trending(): AnonymousResourceCollection
+    public function trending(): JsonResponse
     {
-        return CostumeResource::collection(
-            $this->baseQuery()->orderByDesc('views')->limit(6)->get()
-        );
+        request()->attributes->set('costume_preview', true);
+
+        return response()->json(Cache::remember('api:costumes:trending', self::CACHE_SECONDS, fn () =>
+            CostumeResource::collection($this->baseQuery()->orderByDesc('views')->limit(6)->get())
+                ->response()->getData(true)
+        ));
     }
 
-    public function latest(): AnonymousResourceCollection
+    public function latest(): JsonResponse
     {
-        return CostumeResource::collection(
-            $this->baseQuery()->orderByDesc('id')->limit(8)->get()
-        );
+        request()->attributes->set('costume_preview', true);
+
+        return response()->json(Cache::remember('api:costumes:latest', self::CACHE_SECONDS, fn () =>
+            CostumeResource::collection($this->baseQuery()->orderByDesc('id')->limit(8)->get())
+                ->response()->getData(true)
+        ));
     }
 }

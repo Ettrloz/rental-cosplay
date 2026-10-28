@@ -3,7 +3,7 @@ import type { KostumApi } from '@/hooks/use-kostum';
 import { DashboardLayout } from '@/layouts/dashboard-layout';
 import { router, useForm } from '@inertiajs/react';
 import { ArrowLeft, ImagePlus, Save, X } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type Kota = { id: number; province_id: number; name: string };
 
@@ -41,14 +41,27 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
     description: costume?.deskripsi ?? '',
     city_id: costume?.cityId ? String(costume.cityId) : '',
     status: costume?.status ?? 'available',
-    images: [] as File[]
+    images: [] as File[],
+    deleted_images: [] as string[]
   });
 
   // Gambar lama dari server
   const [gambarAda, setGambarAda] = useState<string[]>(costume?.gambar ?? []);
   // Preview gambar baru yang dipilih {file, url}
   const [previews, setPreviews] = useState<{ file: File; url: string }[]>([]);
+  const [gambarTerpilih, setGambarTerpilih] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!gambarTerpilih) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setGambarTerpilih(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gambarTerpilih]);
 
   const handleFiles = (files: File[]) => {
     const fileList = Array.from(files ?? []);
@@ -127,17 +140,8 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
 
   const hapusGambarAda = (src: string) => {
     if (!costume?.id) return;
-    // Optimistic UI — hapus langsung dari tampilan
     setGambarAda(prev => prev.filter(s => s !== src));
-    // Kirim request hapus gambar ke server via URL gambar
-    router.delete(`/dashboard/kostum/${costume.id}/images`, {
-      data: { url: src },
-      preserveScroll: true,
-      onError: () => {
-        // Kembalikan jika gagal
-        setGambarAda(prev => [...prev, src]);
-      },
-    });
+    form.setData('deleted_images', [...form.data.deleted_images, src]);
   };
 
   const totalGambar = gambarAda.length + previews.length;
@@ -156,8 +160,8 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
       title={edit ? 'Edit Kostum' : 'Tambah Kostum'}
       description="Lengkapi data kostum. Penyewa akan menghubungimu lewat WhatsApp/Instagram yang diatur di profil toko."
     >
-      <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="grid gap-5 rounded-2xl border border-line bg-card p-5">
+      <form onSubmit={submit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="grid min-w-0 gap-5 rounded-2xl border border-line bg-card p-4 sm:p-6">
           <Field label="Judul kostum" error={form.errors.title}>
             <TextInput
               value={form.data.title}
@@ -257,7 +261,7 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
           </Field>
         </div>
 
-        <div className="grid gap-5 self-start">
+        <div className="grid min-w-0 gap-5 self-start">
           <div className="grid gap-5 rounded-2xl border border-line bg-card p-5">
             <Field label="Kota" error={form.errors.city_id}>
               <select
@@ -304,7 +308,8 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
                     <img
                       src={src}
                       alt={`Foto ${i + 1}`}
-                      className="h-full w-full rounded-lg object-cover"
+                      className="h-full w-full cursor-zoom-in rounded-lg object-cover"
+                      onClick={() => setGambarTerpilih(src)}
                     />
                     {edit ? (
                       <button
@@ -325,7 +330,8 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
                     <img
                       src={p.url}
                       alt={`Preview ${i + 1}`}
-                      className="h-full w-full rounded-lg object-cover ring-2 ring-accent/50"
+                      className="h-full w-full cursor-zoom-in rounded-lg object-cover ring-2 ring-accent/50"
+                      onClick={() => setGambarTerpilih(p.url)}
                     />
                     <button
                       type="button"
@@ -387,6 +393,31 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
               <span className="text-[12px] font-semibold text-[#f87171]">{form.errors.images}</span>
             ) : null}
           </div>
+
+          {gambarTerpilih ? (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Pratinjau gambar kostum"
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-5 backdrop-blur-sm"
+              onClick={() => setGambarTerpilih(null)}
+            >
+              <button
+                type="button"
+                aria-label="Tutup pratinjau gambar"
+                onClick={() => setGambarTerpilih(null)}
+                className="absolute top-4 right-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white transition-colors hover:bg-black"
+              >
+                <X size={20} />
+              </button>
+              <img
+                src={gambarTerpilih}
+                alt="Pratinjau gambar kostum"
+                className="max-h-[90vh] max-w-full rounded-xl object-contain shadow-2xl"
+                onClick={event => event.stopPropagation()}
+              />
+            </div>
+          ) : null}
 
           {!profile ? (
             <p className="rounded-2xl border border-line bg-card px-4 py-3 text-[12.5px] text-dim">

@@ -32,6 +32,8 @@ class CostumeRequest extends FormRequest
             'status' => ['required', 'in:available,unavailable'],
             'images' => ['nullable', 'array', 'max:8'],
             'images.*' => ['image', 'max:5120'],
+            'deleted_images' => ['nullable', 'array'],
+            'deleted_images.*' => ['string', 'max:2048'],
         ];
     }
 }

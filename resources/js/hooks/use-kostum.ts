@@ -2,6 +2,73 @@ import type { Kostum } from '@/data/katalog';
 import { Shirt } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+const CACHE_MS = 30_000;
+type CachedResponse = { expires: number; data: unknown };
+
+const responseCache = new Map<string, CachedResponse>();
+const pendingRequests = new Map<string, Promise<unknown>>();
+const storageKey = (url: string) => `rent-cos:api:${url}`;
+
+function readStoredResponse(url: string): CachedResponse | null {
+  try {
+    const stored = sessionStorage.getItem(storageKey(url));
+    if (!stored) return null;
+
+    const cached = JSON.parse(stored) as CachedResponse;
+    if (cached.expires <= Date.now()) {
+      sessionStorage.removeItem(storageKey(url));
+      return null;
+    }
+
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+function storeResponse(url: string, data: unknown): void {
+  const cached = { expires: Date.now() + CACHE_MS, data };
+  responseCache.set(url, cached);
+
+  try {
+    sessionStorage.setItem(storageKey(url), JSON.stringify(cached));
+  } catch {
+    // Continue with the in-memory cache when storage is unavailable.
+  }
+}
+
+function fetchCached(url: string): Promise<unknown> {
+  const cached = responseCache.get(url);
+  if (cached && cached.expires > Date.now()) {
+    return Promise.resolve(cached.data);
+  }
+
+  const stored = readStoredResponse(url);
+  if (stored) {
+    responseCache.set(url, stored);
+    return Promise.resolve(stored.data);
+  }
+
+  const pending = pendingRequests.get(url);
+  if (pending) return pending;
+
+  const request = fetch(url, { headers: { Accept: 'application/json' } })
+    .then(res => {
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      storeResponse(url, data);
+      return data;
+    })
+    .finally(() => {
+      pendingRequests.delete(url);
+    });
+
+  pendingRequests.set(url, request);
+  return request;
+}
+
 export type KostumApi = {
   id?: number;
   slug?: string;
@@ -76,12 +143,12 @@ export function useKostumList(url: string) {
     let batal = false;
     setLoading(true);
 
-    fetch(url, { headers: { Accept: 'application/json' } })
-      .then(res => res.json())
+    fetchCached(url)
       .then(json => {
         if (batal) return;
-        setItems((json.data ?? []).map(toKostum));
-        setMeta(json.meta ?? null);
+        const payload = json as { data?: KostumApi[]; meta?: PaginasiMeta };
+        setItems((payload.data ?? []).map(toKostum));
+        setMeta(payload.meta ?? null);
       })
       .catch(() => {
         // Jika API gagal, daftar dibiarkan kosong.
@@ -113,12 +180,10 @@ export function useKostumDetail(slug: string | null) {
 
     setLoading(true);
 
-    fetch(`/api/costumes/${encodeURIComponent(slug)}`, {
-      headers: { Accept: 'application/json' }
-    })
-      .then(res => (res.ok ? res.json() : null))
+    fetchCached(`/api/costumes/${encodeURIComponent(slug)}`)
       .then(json => {
-        if (!batal) setItem(json?.data ? toKostum(json.data) : null);
+        const payload = json as { data?: KostumApi } | null;
+        if (!batal) setItem(payload?.data ? toKostum(payload.data) : null);
       })
       .catch(() => {
         if (!batal) setItem(null);

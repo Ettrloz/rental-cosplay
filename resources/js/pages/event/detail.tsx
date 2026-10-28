@@ -1,8 +1,9 @@
 import { KomentarSection } from '@/components/komentar-section';
 import { useToast } from '@/components/toast';
-import { cariEvent } from '@/data/event';
+import { useEventDetail } from '@/hooks/use-event';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import clsx from 'clsx';
 import {
   ArrowLeft,
   Bookmark,
@@ -16,14 +17,14 @@ import {
   Users
 } from 'lucide-react';
 import { useState } from 'react';
-import clsx from 'clsx';
 
 const aksi =
   'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-bold text-dim transition-colors hover:bg-chip hover:text-fg';
 
 export default function DetailEvent() {
   const { url } = usePage();
-  const item = cariEvent(decodeURIComponent(url.split('/').pop() ?? ''));
+  const slug = decodeURIComponent(url.split('?')[0].split('/').pop() ?? '');
+  const { item, loading } = useEventDetail(slug);
 
   const [tersimpan, setTersimpan] = useState(false);
   const { panggil, toast } = useToast();
@@ -36,8 +37,12 @@ export default function DetailEvent() {
           <div className="grid h-16 w-16 place-items-center rounded-2xl bg-chip text-fade">
             <CalendarDays size={28} />
           </div>
-          <h1 className="mt-5 text-xl font-extrabold text-fg">Event tidak ditemukan</h1>
-          <p className="mt-1.5 text-[13.5px] text-dim">Event sudah berakhir atau URL-nya salah.</p>
+          <h1 className="mt-5 text-xl font-extrabold text-fg">
+            {loading ? 'Memuat event...' : 'Event tidak ditemukan'}
+          </h1>
+          <p className="mt-1.5 text-[13.5px] text-dim">
+            {loading ? 'Mohon tunggu sebentar.' : 'Event sudah berakhir atau URL-nya salah.'}
+          </p>
           <Link
             href="/event"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[13.5px] font-extrabold text-white transition-colors hover:bg-accent-hover"
@@ -50,7 +55,7 @@ export default function DetailEvent() {
     );
   }
 
-  const linkEvent = `/event/${url.split('/').pop()}`;
+  const linkEvent = `/event/${slug}`;
 
   function bagikan() {
     const link = `${window.location.origin}${linkEvent}`;
@@ -90,12 +95,18 @@ export default function DetailEvent() {
           className="mt-5 overflow-hidden rounded-3xl border border-line bg-card"
         >
           <div className="relative aspect-[16/7]">
-            <img
-              src={item.gambar}
-              alt={item.judul}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
+            {item.gambar ? (
+              <img
+                src={item.gambar}
+                alt={item.judul}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-card2 text-fade">
+                <CalendarDays size={56} strokeWidth={1.2} />
+              </div>
+            )}
             <span className="absolute top-4 left-4 rounded-full bg-black/55 px-3 py-1.5 text-[12px] font-extrabold text-white backdrop-blur-sm">
               {item.tanggal}
             </span>
