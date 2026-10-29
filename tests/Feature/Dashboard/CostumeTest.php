@@ -106,13 +106,16 @@ test('a perental can update their own costume', function () {
     $user = perental();
     $costume = buatCostume($user);
 
-    $this->actingAs($user)->put(route('dashboard.kostum.update', $costume), [
-        'title' => 'Judul Baru',
-        'price' => 200000,
-        'rental_days' => 7,
-        'gender' => 'wanita',
-        'status' => 'unavailable',
-    ])->assertRedirect(route('dashboard.kostum'));
+    $this->actingAs($user)
+        ->put(route('dashboard.kostum.update', $costume), [
+            'title' => 'Judul Baru',
+            'price' => 200000,
+            'rental_days' => 7,
+            'gender' => 'wanita',
+            'status' => 'unavailable',
+        ])
+        ->assertRedirect(route('dashboard.kostum.edit', $costume))
+        ->assertSessionHas('inertia.flash_data', ['success' => 'Kostum berhasil diperbarui.']);
 
     expect($costume->fresh())
         ->title->toBe('Judul Baru')

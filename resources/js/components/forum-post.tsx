@@ -1,23 +1,54 @@
-import { KATEGORI_LABEL, slugifyTopik, type Thread } from '@/data/forum';
 import { useToast } from '@/components/toast';
-import { Link } from '@inertiajs/react';
+import { KATEGORI_LABEL, type Thread } from '@/data/forum';
+import type { Auth } from '@/types';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, Bookmark, Check, Eye, MessageCircle, Share2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 
 const aksi =
   'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12.5px] font-bold text-dim transition-colors hover:bg-chip hover:text-fg';
 
 export function ForumPost({ thread }: { thread: Thread }) {
-  const [vote, setVote] = useState<'up' | 'down' | null>(null);
-  const [tersimpan, setTersimpan] = useState(false);
+  const { auth } = usePage<{ auth: Auth }>().props;
+  const [vote, setVote] = useState<1 | -1 | null>(thread.vote);
+  const [skor, setSkor] = useState(thread.skor);
+  const [disimpan, setDisimpan] = useState(thread.disimpan);
   const { panggil, toast } = useToast();
 
-  const skorTampil = thread.skor + (vote === 'up' ? 1 : 0) - (vote === 'down' ? 1 : 0);
-  const linkTopik = `/forum/${slugifyTopik(thread.judul)}`;
+  useEffect(() => {
+    setVote(thread.vote);
+    setSkor(thread.skor);
+    setDisimpan(thread.disimpan);
+  }, [thread.vote, thread.skor, thread.disimpan]);
 
-  function pilihVote(arah: 'up' | 'down') {
-    setVote(v => (v === arah ? null : arah));
+  const linkTopik = `/forum/${thread.slug}`;
+
+  function pilihVote(arah: 1 | -1) {
+    if (!auth.user) {
+      panggil('Masuk untuk memberi vote');
+      return;
+    }
+
+    const berikut = vote === arah ? null : arah;
+    setVote(berikut);
+    setSkor(thread.skor - (thread.vote ?? 0) + (berikut ?? 0));
+
+    router.post(
+      `/forum/${thread.slug}/vote`,
+      { value: arah },
+      { preserveScroll: true, preserveState: true }
+    );
+  }
+
+  function toggleSimpan() {
+    if (!auth.user) {
+      panggil('Masuk untuk menyimpan topik');
+      return;
+    }
+
+    setDisimpan(sebelumnya => !sebelumnya);
+    router.post(`/forum/${thread.slug}/simpan`, {}, { preserveScroll: true, preserveState: true });
   }
 
   function bagikan() {
@@ -41,10 +72,11 @@ export function ForumPost({ thread }: { thread: Thread }) {
         <button
           type="button"
           aria-label="Upvote"
-          onClick={() => pilihVote('up')}
+          aria-pressed={vote === 1}
+          onClick={() => pilihVote(1)}
           className={clsx(
             'grid h-7 w-7 place-items-center rounded-md transition-colors hover:bg-chip',
-            vote === 'up' ? 'text-accent-text' : 'text-fade hover:text-accent-text'
+            vote === 1 ? 'text-accent-text' : 'text-fade hover:text-accent-text'
           )}
         >
           <ArrowUp size={16} />
@@ -52,18 +84,19 @@ export function ForumPost({ thread }: { thread: Thread }) {
         <span
           className={clsx(
             'min-w-8 text-center text-[13px] font-extrabold tabular-nums',
-            vote === 'up' ? 'text-accent-text' : vote === 'down' ? 'text-accent-text' : 'text-fg'
+            vote ? 'text-accent-text' : 'text-fg'
           )}
         >
-          {skorTampil.toLocaleString('id-ID')}
+          {skor.toLocaleString('id-ID')}
         </span>
         <button
           type="button"
           aria-label="Downvote"
-          onClick={() => pilihVote('down')}
+          aria-pressed={vote === -1}
+          onClick={() => pilihVote(-1)}
           className={clsx(
             'grid h-7 w-7 place-items-center rounded-md transition-colors hover:bg-chip',
-            vote === 'down' ? 'text-accent-text' : 'text-fade hover:text-accent-text'
+            vote === -1 ? 'text-accent-text' : 'text-fade hover:text-accent-text'
           )}
         >
           <ArrowDown size={16} />
@@ -112,27 +145,30 @@ export function ForumPost({ thread }: { thread: Thread }) {
             </button>
             <button
               type="button"
-              onClick={() => setTersimpan(disimpan => !disimpan)}
-              className={clsx(aksi, tersimpan && 'text-accent-text hover:text-accent-text')}
+              onClick={toggleSimpan}
+              aria-pressed={disimpan}
+              className={clsx(aksi, disimpan && 'text-accent-text hover:text-accent-text')}
             >
-              {tersimpan ? <Check size={14} /> : <Bookmark size={14} />}
-              {tersimpan ? 'Tersimpan' : 'Simpan'}
+              {disimpan ? <Check size={14} /> : <Bookmark size={14} />}
+              {disimpan ? 'Tersimpan' : 'Simpan'}
             </button>
           </div>
         </div>
 
-        <Link
-          href={linkTopik}
-          className="hidden shrink-0 self-start sm:block"
-          aria-label={`Buka ${thread.judul}`}
-        >
-          <img
-            src={thread.gambar}
-            alt=""
-            loading="lazy"
-            className="mt-2 h-16 w-24 rounded-lg border border-line object-cover transition-opacity hover:opacity-80"
-          />
-        </Link>
+        {thread.gambar ? (
+          <Link
+            href={linkTopik}
+            className="hidden shrink-0 self-start sm:block"
+            aria-label={`Buka ${thread.judul}`}
+          >
+            <img
+              src={thread.gambar}
+              alt=""
+              loading="lazy"
+              className="mt-2 h-16 w-24 rounded-lg border border-line object-cover transition-opacity hover:opacity-80"
+            />
+          </Link>
+        ) : null}
       </div>
 
       {toast}

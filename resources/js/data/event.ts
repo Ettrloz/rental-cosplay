@@ -1,6 +1,8 @@
-import type { Komentar } from '@/data/forum';
+﻿import type { Komentar } from '@/data/forum';
 
 export type JadwalEvent = {
+  id?: number | null;
+  ownerId?: number | null;
   judul: string;
   tanggal: string;
   penyelenggara: string;

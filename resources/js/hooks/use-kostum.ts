@@ -130,7 +130,7 @@ export function toKostum(item: KostumApi): Kostum {
     icon: Shirt,
     gambar: item.gambar ?? [],
     rental_rules: item.rental_rules,
-    rental_rules_image: item.rental_rules_image,
+    rental_rules_image: item.rental_rules_image
   };
 }
 
@@ -180,7 +180,11 @@ export function useKostumDetail(slug: string | null) {
 
     setLoading(true);
 
-    fetchCached(`/api/costumes/${encodeURIComponent(slug)}`)
+    fetch(`/api/costumes/${encodeURIComponent(slug)}`, { headers: { Accept: 'application/json' } })
+      .then(res => {
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        return res.json();
+      })
       .then(json => {
         const payload = json as { data?: KostumApi } | null;
         if (!batal) setItem(payload?.data ? toKostum(payload.data) : null);

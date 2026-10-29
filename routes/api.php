@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\CosrentController;
 use App\Http\Controllers\Api\CostumeController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\StatsController;
 use Illuminate\Http\Request;
@@ -27,6 +28,9 @@ Route::get('/cosrents/{username}', [CosrentController::class, 'show']);
 
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{slug}', [EventController::class, 'show']);
+
+Route::get('/forum/threads', [ForumController::class, 'index']);
+Route::get('/forum/threads/{slug}', [ForumController::class, 'show']);
 
 Route::middleware('auth:sanctum')->post('/user/avatar', function (Request $request) {
     $request->validate([

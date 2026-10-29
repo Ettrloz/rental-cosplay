@@ -1,43 +1,45 @@
-export type Komentar = {
-  penulis: string;
-  waktu: string;
-  teks: string;
-  skor: number;
-};
+export type KategoriForum =
+  'Want to Rent' | 'Want to Sell' | 'Diskon' | 'Open Commission' | 'Lainnya';
 
 export type Thread = {
+  id: number;
+  slug: string;
   judul: string;
-  kategori: 'Want to Rent' | 'Want to Sell' | 'Diskon' | 'Open Commission' | 'Lainnya';
+  kategori: KategoriForum;
+  isi: string;
+  gambar: string | null;
   penulis: string;
+  userId: number;
   waktu: string;
   dilihat: number;
   balasan: number;
   skor: number;
-  isi: string;
-  gambar: string;
-  komentar: Komentar[];
+  vote: 1 | -1 | null;
+  disimpan: boolean;
 };
 
-export const FORUM: Thread[] = [];
+export type Komentar = {
+  id: number;
+  teks: string;
+  penulis: string;
+  userId: number;
+  waktu: string;
+  skor: number;
+  vote: 1 | -1 | null;
+};
 
-export const KATEGORI_LABEL: Record<Thread['kategori'], string> = {
+export const KATEGORI_FORUM: KategoriForum[] = [
+  'Want to Rent',
+  'Want to Sell',
+  'Diskon',
+  'Open Commission',
+  'Lainnya'
+];
+
+export const KATEGORI_LABEL: Record<KategoriForum, string> = {
   'Want to Rent': 'bg-[#0ea5e9]/12 text-[#38bdf8]',
   'Want to Sell': 'bg-[#10b981]/12 text-[#34d399]',
   Diskon: 'bg-[#f59e0b]/12 text-[#fbbf24]',
   'Open Commission': 'bg-[#8b5cf6]/12 text-[#c084fc]',
   Lainnya: 'bg-chip text-muted'
 };
-
-export function slugifyTopik(judul: string): string {
-  return judul
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/[\s-]+/g, '-');
-}
-
-export function cariTopik(slug: string): Thread | undefined {
-  return FORUM.find(thread => slugifyTopik(thread.judul) === slug);
-}

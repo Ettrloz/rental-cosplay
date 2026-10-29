@@ -6,8 +6,10 @@ import { Head, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, PackageOpen } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+const appOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+
 function filterFromUrl(url: string): FilterState {
-  const params = new URLSearchParams(new URL(url, window.location.origin).search);
+  const params = new URLSearchParams(new URL(url, appOrigin).search);
   const gender = params.get('gender');
   const urutan = params.get('urutan');
 
@@ -28,7 +30,7 @@ function filterFromUrl(url: string): FilterState {
 export default function Katalog() {
   const { url } = usePage();
   const kataKunci = useMemo(
-    () => new URL(url, window.location.origin).searchParams.get('q') ?? '',
+    () => new URL(url, appOrigin).searchParams.get('q') ?? '',
     [url]
   );
   const [filter, setFilter] = useState(() => filterFromUrl(url));

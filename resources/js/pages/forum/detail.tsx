@@ -1,8 +1,9 @@
-import { KomentarSection } from '@/components/komentar-section';
-import { useToast } from '@/components/toast';
-import { cariTopik, KATEGORI_LABEL } from '@/data/forum';
+﻿import { ForumComments } from '@/components/forum-comments';
+import { KATEGORI_LABEL, type Komentar, type Thread } from '@/data/forum';
+import type { Auth } from '@/types';
 import { AppLayout } from '@/layouts/app-layout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { useToast } from '@/components/toast';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
   ArrowDown,
   ArrowLeft,
@@ -13,19 +14,32 @@ import {
   MessageCircle,
   Share2
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 
 const aksi =
   'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-bold text-dim transition-colors hover:bg-chip hover:text-fg';
 
+type Props = {
+  thread: Thread;
+  komentar: Komentar[];
+};
+
 export default function DetailTopik() {
   const { url } = usePage();
-  const thread = cariTopik(decodeURIComponent(url.split('/').pop() ?? ''));
+  const { thread, komentar } = usePage<Props>().props;
+  const slug = decodeURIComponent(url.split('/').pop() ?? '');
 
-  const [vote, setVote] = useState<'up' | 'down' | null>(null);
+  const [vote, setVote] = useState<1 | -1 | null>(thread.vote);
+  const [skor, setSkor] = useState(thread.skor);
   const [tersimpan, setTersimpan] = useState(false);
   const { panggil, toast } = useToast();
+
+  useEffect(() => {
+    setVote(thread.vote);
+    setSkor(thread.skor);
+    setTersimpan(thread.disimpan);
+  }, [thread]);
 
   if (!thread) {
     return (
@@ -49,18 +63,29 @@ export default function DetailTopik() {
     );
   }
 
-  const skorTampil = thread.skor + (vote === 'up' ? 1 : 0) - (vote === 'down' ? 1 : 0);
-  const linkTopik = `/forum/${url.split('/').pop()}`;
+  const skorTampil = skor;
+  const linkTopik = `/forum/${thread.slug}`;
 
-  function pilihVote(arah: 'up' | 'down') {
-    setVote(v => (v === arah ? null : arah));
+  function pilihVote(arah: 1 | -1) {
+    const berikut = vote === arah ? null : arah;
+    const current = vote ?? 0;
+    const next = berikut ?? 0;
+
+    setVote(berikut);
+    setSkor(thread.skor - current + next);
+
+    router.post(
+      `/forum/${thread.slug}/vote`,
+      { value: arah },
+      { preserveScroll: true, preserveState: true }
+    );
   }
 
   function bagikan() {
-    const link = `${window.location.origin}${linkTopik}`;
+    const urlTopik = `${window.location.origin}${linkTopik}`;
     if (navigator.clipboard) {
       navigator.clipboard
-        .writeText(link)
+        .writeText(urlTopik)
         .then(() => panggil('Link topik disalin'))
         .catch(() => panggil('Salin link dari URL halaman'));
     } else {
@@ -80,7 +105,10 @@ export default function DetailTopik() {
           Kembali ke forum
         </Link>
 
-        <article data-reveal className="mt-5 rounded-2xl border border-line bg-card p-5 sm:p-7">
+        <article
+          data-reveal
+          className="mt-5 overflow-hidden rounded-2xl border border-line bg-card p-5 sm:p-7"
+        >
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] text-fade">
             <span
               className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${KATEGORI_LABEL[thread.kategori]}`}
@@ -109,33 +137,37 @@ export default function DetailTopik() {
 
           <p className="mt-4 text-[14.5px] leading-relaxed text-fg2">{thread.isi}</p>
 
-          <img
-            src={thread.gambar}
-            alt={thread.judul}
-            loading="lazy"
-            className="mt-5 aspect-video w-full rounded-xl border border-line object-cover"
-          />
+          {thread.gambar ? (
+            <img
+              src={thread.gambar}
+              alt={thread.judul}
+              loading="lazy"
+              className="mt-5 aspect-video w-full rounded-xl border border-line object-cover"
+            />
+          ) : null}
 
           <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
             <button
               type="button"
-              onClick={() => pilihVote('up')}
+              onClick={() => pilihVote(1)}
               className={clsx(
                 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-bold transition-colors',
-                vote === 'up'
+                vote === 1
                   ? 'bg-accent-soft text-accent-text'
                   : 'text-dim hover:bg-chip hover:text-fg'
               )}
             >
               <ArrowUp size={15} />
-              {skorTampil.toLocaleString('id-ID')}
+              {skor.toLocaleString('id-ID')}
             </button>
             <button
               type="button"
-              onClick={() => pilihVote('down')}
+              onClick={() => pilihVote(-1)}
               className={clsx(
-                'inline-flex items-center gap-1 rounded-lg px-2 py-2 text-dim transition-colors hover:bg-chip hover:text-fg',
-                vote === 'down' ? 'text-accent-text' : ''
+                'inline-flex items-center gap-1 rounded-lg px-2 py-2 text-[13px] font-bold transition-colors',
+                vote === -1
+                  ? 'bg-accent-soft text-accent-text'
+                  : 'text-dim hover:bg-chip hover:text-fg'
               )}
               aria-label="Downvote"
             >
@@ -148,7 +180,7 @@ export default function DetailTopik() {
             </button>
             <button
               type="button"
-              onClick={() => setTersimpan(disimpan => !disimpan)}
+              onClick={() => setTersimpan(sebelumnya => !sebelumnya)}
               className={clsx(aksi, tersimpan && 'text-accent-text hover:text-accent-text')}
             >
               {tersimpan ? <Check size={14} /> : <Bookmark size={14} />}
@@ -158,7 +190,7 @@ export default function DetailTopik() {
         </article>
 
         <div className="mt-8">
-          <KomentarSection komentarAwal={thread.komentar} />
+          <ForumComments komentar={komentar} threadSlug={thread.slug} />
         </div>
       </section>
 

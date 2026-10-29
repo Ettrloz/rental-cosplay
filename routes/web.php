@@ -4,7 +4,9 @@ use App\Http\Controllers\Dashboard\AccountController;
 use App\Http\Controllers\Dashboard\CosrentProfileController;
 use App\Http\Controllers\Dashboard\CostumeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\ForumController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'home')->name('home');
@@ -12,10 +14,15 @@ Route::inertia('/katalog', 'katalog')->name('katalog');
 Route::inertia('/katalog/{kostum}', 'katalog/detail')->name('katalog.show');
 Route::inertia('/cosrent', 'cosrent')->name('cosrent');
 Route::inertia('/cosrent/{cosrent}', 'cosrent/detail')->name('cosrent.show');
+
 Route::inertia('/event', 'event')->name('event');
+Route::get('/event/buat', [EventController::class, 'create'])
+    ->middleware('auth')
+    ->name('event.create');
 Route::inertia('/event/{event}', 'event/detail')->name('event.show');
-Route::inertia('/forum', 'forum')->name('forum');
-Route::inertia('/forum/{topik}', 'forum/detail')->name('forum.show');
+
+Route::get('/forum', [ForumController::class, 'index'])->name('forum');
+Route::get('/forum/{thread:slug}', [ForumController::class, 'show'])->name('forum.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -42,4 +49,16 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::post('/favorites', [FavoriteController::class, 'store'])->name('favorites.store');
+
+    Route::post('/event', [EventController::class, 'store'])->name('event.store');
+    Route::get('/event/{event}/edit', [EventController::class, 'edit'])->name('event.edit');
+    Route::put('/event/{event}', [EventController::class, 'update'])->name('event.update');
+    Route::delete('/event/{event}', [EventController::class, 'destroy'])->name('event.destroy');
+
+    Route::post('/forum', [ForumController::class, 'store'])->name('forum.store');
+    Route::delete('/forum/{thread:slug}', [ForumController::class, 'destroy'])->name('forum.destroy');
+    Route::post('/forum/{thread:slug}/komentar', [ForumController::class, 'storeComment'])->name('forum.comments.store');
+    Route::post('/forum/{thread:slug}/vote', [ForumController::class, 'voteThread'])->name('forum.vote');
+    Route::post('/forum/{thread:slug}/simpan', [ForumController::class, 'bookmark'])->name('forum.bookmark');
+    Route::post('/forum/komentar/{comment}/vote', [ForumController::class, 'voteComment'])->name('forum.comments.vote');
 });

@@ -1,7 +1,9 @@
-import type { JadwalEvent } from '@/data/event';
+﻿import type { JadwalEvent } from '@/data/event';
 import { useEffect, useState } from 'react';
 
 type EventApi = {
+  id?: number;
+  ownerId?: number | null;
   judul: string;
   tanggal: string;
   penyelenggara: string;
@@ -15,6 +17,7 @@ type EventApi = {
 
 export function toEvent(item: EventApi): JadwalEvent {
   return {
+    id: item.id ?? null,
     judul: item.judul,
     tanggal: item.tanggal,
     penyelenggara: item.penyelenggara,
@@ -24,7 +27,8 @@ export function toEvent(item: EventApi): JadwalEvent {
     harga: item.harga,
     isi: item.isi,
     gambar: item.gambar,
-    komentar: []
+    komentar: [],
+    ownerId: item.ownerId ?? null
   };
 }
 

@@ -5,10 +5,10 @@ import { FILTER_AWAL, useLokasiOptions } from '@/components/filter-bar';
 import { ForumPost } from '@/components/forum-post';
 import { KostumCard } from '@/components/kostum-card';
 import { SectionHead } from '@/components/section-head';
-import { EVENT } from '@/data/event';
-import { FORUM } from '@/data/forum';
 import { BUNDLE } from '@/data/katalog';
 import { useCosrentList } from '@/hooks/use-cosrent';
+import { useEventList } from '@/hooks/use-event';
+import { useForumList } from '@/hooks/use-forum';
 import { useKostumList, useStats } from '@/hooks/use-kostum';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
@@ -56,6 +56,8 @@ export default function Home() {
   const trending = useKostumList('/api/costumes/trending');
   const katalog = useKostumList('/api/costumes/latest');
   const cosrent = useCosrentList();
+  const events = useEventList();
+  const forum = useForumList();
 
   const pilihFilter = (patch: Partial<HeroFilter>) => {
     const next = { ...filter, ...patch };
@@ -227,9 +229,9 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Event Cosplay" selengkapnyaHref="/event" />
-          {EVENT.length > 0 ? (
+          {events.items.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {EVENT.slice(0, 2).map(item => (
+              {events.items.slice(0, 2).map(item => (
                 <EventCard key={item.judul} item={item} />
               ))}
             </div>
@@ -243,9 +245,9 @@ export default function Home() {
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionHead judul="Forum" selengkapnyaHref="/forum" />
-          {FORUM.length > 0 ? (
+          {forum.threads.length > 0 ? (
             <div className="flex flex-col gap-3">
-              {FORUM.slice(0, 3).map(thread => (
+              {forum.threads.slice(0, 3).map(thread => (
                 <ForumPost key={thread.judul} thread={thread} />
               ))}
             </div>

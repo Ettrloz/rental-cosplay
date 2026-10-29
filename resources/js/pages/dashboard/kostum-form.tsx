@@ -1,9 +1,11 @@
-import { Field, TextArea, TextInput, inputClass } from '@/components/form-field';
+import { Dropdown } from '@/components/dropdown';
+import { Field, TextArea, TextInput } from '@/components/form-field';
+import { useToast } from '@/components/toast';
 import type { KostumApi } from '@/hooks/use-kostum';
 import { DashboardLayout } from '@/layouts/dashboard-layout';
-import { router, useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, ImagePlus, Save, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Kota = { id: number; province_id: number; name: string };
 
@@ -13,19 +15,21 @@ type Props = {
   profile: { shop_name: string; whatsapp: string | null; instagram: string | null } | null;
 };
 
-const GENDER = [
+const GENDER: { value: string; label: string }[] = [
   { value: 'wanita', label: 'Wanita' },
   { value: 'pria', label: 'Pria' },
   { value: 'unisex', label: 'Unisex' }
 ];
 
-const STATUS = [
+const STATUS: { value: string; label: string }[] = [
   { value: 'available', label: 'Tersedia' },
   { value: 'unavailable', label: 'Tidak tersedia' }
 ];
 
 export default function DashboardKostumForm({ costume, cities, profile }: Props) {
   const edit = Boolean(costume?.id);
+  const { panggil, toast } = useToast();
+  const flash = usePage().flash as { success?: string };
 
   const form = useForm({
     title: costume?.judul ?? '',
@@ -51,6 +55,10 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
   const [previews, setPreviews] = useState<{ file: File; url: string }[]>([]);
   const [gambarTerpilih, setGambarTerpilih] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (flash?.success) panggil(flash.success);
+  }, [flash?.success, panggil]);
 
   useEffect(() => {
     if (!gambarTerpilih) return;
@@ -149,7 +157,11 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (edit) {
-      form.put(`/dashboard/kostum/${costume?.id}`, { forceFormData: true });
+      form.put(`/dashboard/kostum/${costume?.id}`, {
+        forceFormData: true,
+        preserveScroll: true,
+        preserveState: false
+      });
     } else {
       form.post('/dashboard/kostum', { forceFormData: true });
     }
@@ -215,19 +227,16 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
             </Field>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Gender" error={form.errors.gender}>
-              <select
+              <Dropdown
+                label="Gender"
                 value={form.data.gender}
-                onChange={e => form.setData('gender', e.target.value)}
-                className={inputClass}
-              >
-                {GENDER.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                options={GENDER}
+                onChange={value => form.setData('gender', value)}
+                invalid={Boolean(form.errors.gender)}
+                variant="field"
+              />
             </Field>
             <Field label="Ukuran" error={form.errors.size}>
               <TextInput
@@ -264,32 +273,26 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
         <div className="grid min-w-0 gap-5 self-start">
           <div className="grid gap-5 rounded-2xl border border-line bg-card p-5">
             <Field label="Kota" error={form.errors.city_id}>
-              <select
+              <Dropdown
+                label="Kota"
                 value={form.data.city_id}
-                onChange={e => form.setData('city_id', e.target.value)}
-                className={inputClass}
-              >
-                <option value="">— Pilih kota —</option>
-                {cities.map(kota => (
-                  <option key={kota.id} value={kota.id}>
-                    {kota.name}
-                  </option>
-                ))}
-              </select>
+                options={cities.map(kota => ({ value: String(kota.id), label: kota.name }))}
+                onChange={value => form.setData('city_id', value)}
+                placeholder="Pilih kota"
+                invalid={Boolean(form.errors.city_id)}
+                variant="field"
+              />
             </Field>
 
             <Field label="Status" error={form.errors.status}>
-              <select
+              <Dropdown
+                label="Status"
                 value={form.data.status}
-                onChange={e => form.setData('status', e.target.value)}
-                className={inputClass}
-              >
-                {STATUS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                options={STATUS}
+                onChange={value => form.setData('status', value)}
+                invalid={Boolean(form.errors.status)}
+                variant="field"
+              />
             </Field>
           </div>
 
@@ -448,6 +451,8 @@ export default function DashboardKostumForm({ costume, cities, profile }: Props)
           </div>
         </div>
       </form>
+
+      {toast}
     </DashboardLayout>
   );
 }

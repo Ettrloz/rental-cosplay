@@ -1,8 +1,8 @@
-import { KomentarSection } from '@/components/komentar-section';
+﻿import { KomentarSection } from '@/components/komentar-section';
 import { useToast } from '@/components/toast';
 import { useEventDetail } from '@/hooks/use-event';
 import { AppLayout } from '@/layouts/app-layout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import clsx from 'clsx';
 import {
   ArrowLeft,
@@ -12,22 +12,25 @@ import {
   CircleDollarSign,
   Clock,
   MapPin,
+  Pencil,
   Share2,
   Ticket,
   Users
 } from 'lucide-react';
 import { useState } from 'react';
+import type { Auth } from '@/types';
 
 const aksi =
   'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-bold text-dim transition-colors hover:bg-chip hover:text-fg';
 
 export default function DetailEvent() {
-  const { url } = usePage();
+  const { url, props } = usePage<{ auth: Auth }>();
   const slug = decodeURIComponent(url.split('?')[0].split('/').pop() ?? '');
   const { item, loading } = useEventDetail(slug);
 
   const [tersimpan, setTersimpan] = useState(false);
   const { panggil, toast } = useToast();
+  const auth = props.auth;
 
   if (!item) {
     return (
@@ -56,6 +59,8 @@ export default function DetailEvent() {
   }
 
   const linkEvent = `/event/${slug}`;
+
+  const isPemilik = auth.user !== null && item.ownerId != null && auth.user.id === item.ownerId;
 
   function bagikan() {
     const link = `${window.location.origin}${linkEvent}`;
@@ -136,6 +141,29 @@ export default function DetailEvent() {
                   {tersimpan ? <Check size={14} /> : <Bookmark size={14} />}
                   {tersimpan ? 'Tersimpan' : 'Simpan'}
                 </button>
+                {isPemilik ? (
+                  <>
+                    <Link
+                      href={`/event/${item.id}/edit`}
+                      className="inline-flex items-center gap-2 rounded-lg bg-chip px-3 py-2 text-[13px] font-bold text-fg transition-colors hover:bg-chip2"
+                    >
+                      <Pencil size={14} />
+                      Edit Event
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.delete(`/event/${item.id}`, {
+                          preserveScroll: true,
+                          preserveState: false
+                        })
+                      }
+                      className={clsx(aksi, 'text-[#f87171] hover:bg-chip hover:text-[#f87171]')}
+                    >
+                      Hapus Event
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
 

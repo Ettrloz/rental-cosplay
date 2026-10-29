@@ -1,4 +1,4 @@
-import type { Komentar } from '@/data/forum';
+﻿import type { Komentar } from '@/data/forum';
 import { ArrowDown, ArrowUp, MessageCircle, Send } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
@@ -75,7 +75,15 @@ export function KomentarSection({
     event.preventDefault();
     const teks = isiBaru.trim();
     if (!teks) return;
-    const baru: Komentar = { penulis: 'Kamu', waktu: 'Baru saja', teks, skor: 1 };
+    const baru: Komentar = {
+      id: Date.now(),
+      teks,
+      penulis: 'Kamu',
+      userId: 0,
+      waktu: 'Baru saja',
+      skor: 1,
+      vote: null
+    };
     setKomentar(list => [baru, ...list]);
     setIsiBaru('');
   }

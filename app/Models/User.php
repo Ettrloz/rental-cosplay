@@ -66,4 +66,29 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(Favorite::class);
     }
+
+    public function forumThreads(): HasMany
+    {
+        return $this->hasMany(ForumThread::class);
+    }
+
+    public function forumComments(): HasMany
+    {
+        return $this->hasMany(ForumComment::class);
+    }
+
+    public function forumVotes(): HasMany
+    {
+        return $this->hasMany(ForumVote::class);
+    }
+
+    public function forumBookmarks(): HasMany
+    {
+        return $this->hasMany(ForumBookmark::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
 }

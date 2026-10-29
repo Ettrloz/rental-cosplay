@@ -1,5 +1,4 @@
-import { EventCard } from '@/components/event-card';
-import { useToast } from '@/components/toast';
+﻿import { EventCard } from '@/components/event-card';
 import { useEventList } from '@/hooks/use-event';
 import { AppLayout } from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -7,12 +6,11 @@ import { Plus } from 'lucide-react';
 
 export default function Event() {
   const { auth } = usePage<{ auth?: { user?: unknown } }>().props;
-  const { panggil, toast } = useToast();
   const { items, loading } = useEventList();
 
   function buatEvent() {
     if (auth?.user) {
-      panggil('Fitur segera hadir');
+      router.visit('/event/buat');
     } else {
       router.visit('/login');
     }
@@ -66,8 +64,6 @@ export default function Event() {
           )}
         </div>
       </section>
-
-      {toast}
     </AppLayout>
   );
 }

@@ -115,16 +115,15 @@ class CostumeController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $payload = Cache::remember("api:costumes:show:{$slug}", self::CACHE_SECONDS, function () use ($slug) {
-            $costume = $this->baseQuery()
-                ->with(['city.province', 'cosrentProfile.user', 'images'])
-                ->where('slug', $slug)
-                ->firstOrFail();
+        $costume = $this->baseQuery()
+            ->with(['city.province', 'cosrentProfile.user', 'images'])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-            return (new CostumeResource($costume))->response()->getData(true);
-        });
+        $costume->increment('views');
+        $costume->refresh()->load(['city.province', 'cosrentProfile.user', 'images']);
 
-        return response()->json($payload);
+        return response()->json((new CostumeResource($costume))->response()->getData(true));
     }
 
     public function trending(): JsonResponse

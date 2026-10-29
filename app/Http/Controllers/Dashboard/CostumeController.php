@@ -83,7 +83,9 @@ class CostumeController extends Controller
 
         $this->syncImages($costume, $request);
 
-        return to_route('dashboard.kostum')->with('success', 'Kostum berhasil diperbarui.');
+        Inertia::flash('success', 'Kostum berhasil diperbarui.');
+
+        return to_route('dashboard.kostum.edit', $costume);
     }
 
     public function destroy(Request $request, Costume $costume): RedirectResponse

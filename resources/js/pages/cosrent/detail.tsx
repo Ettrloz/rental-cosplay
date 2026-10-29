@@ -98,7 +98,7 @@ export default function DetailCosrent() {
           className="mt-5 overflow-hidden rounded-3xl border border-line bg-card"
         >
           <div className="relative aspect-[6/2]">
-            {item.thumbnail ?? item.foto ? (
+            {(item.thumbnail ?? item.foto) ? (
               <img
                 src={item.thumbnail ?? item.foto}
                 alt={item.nama}
@@ -184,7 +184,9 @@ export default function DetailCosrent() {
             </div>
 
             {(item.bio ?? item.deskripsi) ? (
-              <p className="mt-6 text-[14px] leading-relaxed text-fg2">{item.bio ?? item.deskripsi}</p>
+              <p className="mt-6 text-[14px] leading-relaxed text-fg2">
+                {item.bio ?? item.deskripsi}
+              </p>
             ) : null}
 
             <div className="mt-6 flex flex-wrap gap-3">

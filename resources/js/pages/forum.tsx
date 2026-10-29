@@ -1,9 +1,13 @@
+import { Dropdown } from '@/components/dropdown';
 import { ForumPost } from '@/components/forum-post';
-import { FORUM, type Thread } from '@/data/forum';
+import { Field, TextArea, TextInput } from '@/components/form-field';
+import { useToast } from '@/components/toast';
+import { KATEGORI_FORUM, type KategoriForum, type Thread } from '@/data/forum';
 import { AppLayout } from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-import { Clock, Eye, Flame, ShieldCheck } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import type { Auth } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Clock, Eye, Flame, ImagePlus, Plus, ShieldCheck, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 const ATURAN = [
@@ -21,21 +25,73 @@ const TAB_SORT: { mode: ModeSort; ikon: typeof Clock; label: string }[] = [
   { mode: 'Sering Dilihat', ikon: Eye, label: 'Sering Dilihat' }
 ];
 
-export default function Forum() {
-  const [sort, setSort] = useState<ModeSort>('Terbaru');
+type Props = {
+  threads: Thread[];
+  stats: { threads: number; views: number; members: number };
+  auth: Auth;
+};
 
-  const threads = useMemo(() => {
-    const data = [...FORUM];
+export default function Forum() {
+  const { threads, stats, auth } = usePage<Props>().props;
+  const flash = usePage().flash as { success?: string };
+  const { panggil, toast } = useToast();
+  const [sort, setSort] = useState<ModeSort>('Terbaru');
+  const [bukaForm, setBukaForm] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const form = useForm<{
+    category: KategoriForum;
+    title: string;
+    body: string;
+    image: File | null;
+  }>({
+    category: 'Want to Rent',
+    title: '',
+    body: '',
+    image: null
+  });
+
+  useEffect(() => {
+    if (flash?.success) panggil(flash.success);
+  }, [flash?.success, panggil]);
+
+  const daftar = useMemo(() => {
+    const data = [...threads];
     if (sort === 'Terpopuler') {
       data.sort((a, b) => b.skor - a.skor);
     } else if (sort === 'Sering Dilihat') {
       data.sort((a, b) => b.dilihat - a.dilihat);
+    } else {
+      data.sort((a, b) => b.id - a.id);
     }
     return data;
-  }, [sort]);
+  }, [threads, sort]);
 
-  const totalDilihat = useMemo(() => FORUM.reduce((total, t) => total + t.dilihat, 0), []);
-  const moderator = useMemo(() => [...new Set(threads.map((t: Thread) => t.penulis))], [threads]);
+  const kontributor = useMemo(
+    () => [...new Set(threads.map(thread => thread.penulis))].slice(0, 6),
+    [threads]
+  );
+
+  function buatTopik() {
+    if (!auth.user) {
+      router.visit('/login');
+      return;
+    }
+
+    setBukaForm(terbuka => !terbuka);
+  }
+
+  function kirimTopik(event: React.FormEvent) {
+    event.preventDefault();
+    form.post('/forum', {
+      forceFormData: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        form.reset();
+        setBukaForm(false);
+      }
+    });
+  }
 
   return (
     <AppLayout>
@@ -43,13 +99,24 @@ export default function Forum() {
 
       <section>
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-          <div data-reveal className="max-w-2xl">
-            <h1 className="text-3xl leading-[1.15] font-extrabold tracking-tight text-fg sm:text-4xl">
-              Forum Cosplay
-            </h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-dim">
-              Tanya ukuran kostum, jual-beli, diskon musiman, sampai blacklist customer bermasalah.
-            </p>
+          <div data-reveal className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <h1 className="text-3xl leading-[1.15] font-extrabold tracking-tight text-fg sm:text-4xl">
+                Forum Cosplay
+              </h1>
+              <p className="mt-3 text-[15px] leading-relaxed text-dim">
+                Tanya ukuran kostum, jual-beli, diskon musiman, sampai blacklist customer
+                bermasalah.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={buatTopik}
+              className="mb-1 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-[14px] font-bold text-white transition-colors duration-200 hover:bg-accent-hover"
+            >
+              {bukaForm ? <X size={16} /> : <Plus size={16} />}
+              {bukaForm ? 'Tutup' : 'Buat Topik'}
+            </button>
           </div>
         </div>
       </section>
@@ -58,6 +125,79 @@ export default function Forum() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div>
+              {bukaForm && auth.user ? (
+                <form
+                  onSubmit={kirimTopik}
+                  className="mb-4 rounded-2xl border border-line bg-card p-5"
+                >
+                  <h2 className="text-[14px] font-extrabold text-fg">Topik Baru</h2>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-[180px_minmax(0,1fr)]">
+                    <Field label="Kategori" error={form.errors.category}>
+                      <Dropdown
+                        label="Kategori"
+                        variant="field"
+                        value={form.data.category}
+                        options={KATEGORI_FORUM}
+                        onChange={value => form.setData('category', value)}
+                        invalid={Boolean(form.errors.category)}
+                      />
+                    </Field>
+                    <Field label="Judul" error={form.errors.title}>
+                      <TextInput
+                        value={form.data.title}
+                        onChange={event => form.setData('title', event.target.value)}
+                        placeholder="mis. Cari kostum Genshin size M"
+                        invalid={Boolean(form.errors.title)}
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="mt-4">
+                    <Field label="Isi topik" error={form.errors.body}>
+                      <TextArea
+                        value={form.data.body}
+                        onChange={event => form.setData('body', event.target.value)}
+                        placeholder="Tulis detail pertanyaan, barang, atau diskon kamu..."
+                        invalid={Boolean(form.errors.body)}
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={event => form.setData('image', event.target.files?.[0] ?? null)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileRef.current?.click()}
+                        className="inline-flex items-center gap-2 rounded-xl border border-line bg-chip px-4 py-2.5 text-[13px] font-bold text-fg transition-colors hover:border-line2"
+                      >
+                        <ImagePlus size={15} />
+                        {form.data.image ? form.data.image.name : 'Lampiran gambar (opsional)'}
+                      </button>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={form.processing}
+                      className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[13.5px] font-extrabold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Plus size={15} />
+                      {form.processing ? 'Mengirim...' : 'Publikasikan'}
+                    </button>
+                  </div>
+                  {form.errors.image ? (
+                    <p className="mt-2 text-[12px] font-semibold text-[#f87171]">
+                      {form.errors.image}
+                    </p>
+                  ) : null}
+                </form>
+              ) : null}
+
               <div
                 data-reveal
                 className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-card px-3 py-2.5"
@@ -79,19 +219,27 @@ export default function Forum() {
                   </button>
                 ))}
                 <span className="ml-auto hidden text-[12.5px] font-semibold text-faint sm:block">
-                  {threads.length} topik
+                  {daftar.length} topik
                 </span>
               </div>
 
               <div className="mt-4 flex flex-col gap-3">
-                {threads.length > 0 ? (
-                  threads.map(thread => <ForumPost key={thread.judul} thread={thread} />)
+                {daftar.length > 0 ? (
+                  daftar.map(thread => <ForumPost key={thread.id} thread={thread} />)
                 ) : (
                   <div className="rounded-2xl border border-line bg-card px-6 py-14 text-center">
                     <p className="text-[14.5px] font-bold text-fg">Belum ada topik</p>
                     <p className="mt-1 text-[13px] text-dim">
-                      Topik dari anggota komunitas akan tampil di sini.
+                      Jadilah yang pertama memulai diskusi di komunitas.
                     </p>
+                    <button
+                      type="button"
+                      onClick={buatTopik}
+                      className="mt-5 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-[13.5px] font-extrabold text-white transition-colors hover:bg-accent-hover"
+                    >
+                      <Plus size={15} />
+                      Buat Topik
+                    </button>
                   </div>
                 )}
               </div>
@@ -114,18 +262,20 @@ export default function Forum() {
                 <div className="flex divide-x divide-line border-b border-line text-center">
                   <div className="flex-1 px-2 py-3">
                     <p className="text-[16px] font-extrabold tabular-nums text-fg">
-                      {FORUM.length}
+                      {stats.threads.toLocaleString('id-ID')}
                     </p>
                     <p className="text-[11.5px] font-semibold text-fade">Topik</p>
                   </div>
                   <div className="flex-1 px-2 py-3">
                     <p className="text-[16px] font-extrabold tabular-nums text-fg">
-                      {totalDilihat.toLocaleString('id-ID')}
+                      {stats.views.toLocaleString('id-ID')}
                     </p>
                     <p className="text-[11.5px] font-semibold text-fade">Dilihat</p>
                   </div>
                   <div className="flex-1 px-2 py-3">
-                    <p className="text-[16px] font-extrabold tabular-nums text-fg">9</p>
+                    <p className="text-[16px] font-extrabold tabular-nums text-fg">
+                      {stats.members.toLocaleString('id-ID')}
+                    </p>
                     <p className="text-[11.5px] font-semibold text-fade">Member</p>
                   </div>
                 </div>
@@ -133,17 +283,21 @@ export default function Forum() {
                 <div className="space-y-3 px-5 py-4">
                   <div>
                     <h2 className="text-[11px] font-extrabold tracking-wider text-faint uppercase">
-                      Moderator
+                      Kontributor
                     </h2>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {moderator.map(name => (
-                        <span
-                          key={name}
-                          className="rounded-full bg-chip px-2.5 py-1 text-[11.5px] font-bold text-fg2"
-                        >
-                          u/{name}
-                        </span>
-                      ))}
+                      {kontributor.length > 0 ? (
+                        kontributor.map(name => (
+                          <span
+                            key={name}
+                            className="rounded-full bg-chip px-2.5 py-1 text-[11.5px] font-bold text-fg2"
+                          >
+                            u/{name}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[12px] text-faint">Belum ada.</span>
+                      )}
                     </div>
                   </div>
 
@@ -171,6 +325,8 @@ export default function Forum() {
           </div>
         </div>
       </section>
+
+      {toast}
     </AppLayout>
   );
 }

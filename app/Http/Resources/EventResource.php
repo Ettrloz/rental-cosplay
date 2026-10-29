@@ -19,8 +19,10 @@ class EventResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
+            'ownerId' => $this->user_id,
             'judul' => $this->title,
             'tanggal' => $this->date_label,
+            'mulai' => $this->starts_on?->toDateString(),
             'penyelenggara' => $this->organizer,
             'lokasi' => $this->location,
             'venue' => $this->venue ?? '-',
