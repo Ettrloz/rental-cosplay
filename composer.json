@@ -18,8 +18,7 @@
     "laravel/tinker": "^3.0",
     "laravel/wayfinder": "^0.1.14",
     "laravolt/indonesia": "^0.41.0",
-    "league/flysystem-aws-s3-v3": "^3.35",
-    "symfony/console": "^7.4"
+    "league/flysystem-aws-s3-v3": "^3.35"
   },
   "require-dev": {
     "fakerphp/faker": "^1.24",
@@ -116,6 +115,7 @@
       "php-http/discovery": true
     },
     "platform": {
+      "php": "8.4.1"
     }
   },
   "minimum-stability": "stable",
