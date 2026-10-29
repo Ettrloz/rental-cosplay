@@ -3,6 +3,12 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+$sslCaPath = env('MYSQL_ATTR_SSL_CA');
+
+if (is_string($sslCaPath) && $sslCaPath !== '' && ! Str::startsWith($sslCaPath, ['/', '\\']) && ! (strlen($sslCaPath) > 1 && $sslCaPath[1] === ':')) {
+    $sslCaPath = base_path($sslCaPath);
+}
+
 return [
 
     /*
@@ -60,7 +66,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                Mysql::ATTR_SSL_CA => $sslCaPath,
                 Mysql::ATTR_SSL_VERIFY_SERVER_CERT => in_array(env('DB_SSLMODE'), ['require', 'verify-ca', 'verify-identity'], true) ? filter_var(env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT', true), FILTER_VALIDATE_BOOLEAN) : null,
             ]) : [],
         ],
@@ -81,7 +87,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                Mysql::ATTR_SSL_CA => $sslCaPath,
             ]) : [],
         ],
 
